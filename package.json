@@ -1,0 +1,22 @@
+{
+  "name": "splitter",
+  "version": "1.0.0",
+  "description": "Splitter contract on Ethereum",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "truffle-assertions": "^0.9.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Ethereum",
+    "Solidity"
+  ],
+  "author": "Jake Lin",
+  "license": "MIT"
+}

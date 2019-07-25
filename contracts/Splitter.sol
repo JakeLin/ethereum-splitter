@@ -12,7 +12,7 @@ contract Splitter {
   }
 
   modifier onlyAlice() {
-    require (msg.sender == alice, "Only alice can split!");
+    require (msg.sender == alice, "Only Alice can split!");
     _;
   }
 
