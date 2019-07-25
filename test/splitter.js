@@ -45,18 +45,6 @@ contract('Splitter', accounts => {
     });
   });
 
-  // It doesn't fail because we can call/send the method with negative ether.
-  // Don't know why ~_~
-  // context('When Alice splits negative wei', () => {
-  //   it('should not split the ether to Bob and Carol', async () => {
-  //     // Act & Assert
-  //     await truffleAssert.reverts(
-  //       contract.methods.split().send({from: alice, value: -1}),
-  //       'Must split more than zero ether!'
-  //     );
-  //   });
-  // });
-
   context('When Alice splits 3 wei (the number is odd)', () => {
     it('should not split the ether to Bob and Carol', async () => {
       // Act & Assert
