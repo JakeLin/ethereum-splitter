@@ -2,16 +2,11 @@ const truffleAssert = require('truffle-assertions');
 const Splitter = artifacts.require('Splitter');
 
 contract('Splitter', accounts => {
-  const admin = accounts[0];
-  const alice = accounts[1];
-  const bob = accounts[2];
-  const carol = accounts[3];
-  const notAlice = accounts[4];
+  const [admin, alice, bob, carol, notAlice] = accounts;
 
   let contract;
   beforeEach(async () => {
-      const truffleContract = await Splitter.new(alice, bob, carol, { from: admin, gas: 3000000 });
-      contract = truffleContract.contract;
+    contract = (await Splitter.new(alice, bob, carol, { from: admin, gas: 3000000 })).contract;
   });
 
   it('should deploy the contract correctly', () => {
