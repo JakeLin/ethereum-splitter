@@ -2,15 +2,18 @@ const truffleAssert = require('truffle-assertions');
 const Splitter = artifacts.require('Splitter');
 
 contract('Splitter', accounts => {
-  const [admin, alice, bob, carol, notAlice] = accounts;
+  const [alice, bob, carol, notAlice] = accounts;
 
   let contract;
   beforeEach(async () => {
-    contract = (await Splitter.new(alice, bob, carol, { from: admin, gas: 3000000 })).contract;
+    contract = (await Splitter.new(bob, carol, { from: alice, gas: 3000000 })).contract;
   });
 
-  it('should deploy the contract correctly', () => {
+  it('should deploy the contract correctly', async () => {
     assert.ok(contract);
+    assert.equal((await contract.methods.alice().call()), alice);
+    assert.equal((await contract.methods.bob().call()), bob);
+    assert.equal((await contract.methods.carol().call()), carol);
   });
 
   context('When Alice splits 0.02 ether (the number is even)', () => {

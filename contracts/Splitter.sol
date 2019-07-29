@@ -5,8 +5,8 @@ contract Splitter {
   address payable public bob;
   address payable public carol;
 
-  constructor(address _alice, address payable _bob, address payable _carol) public {
-    alice = _alice;
+  constructor(address payable _bob, address payable _carol) public {
+    alice = msg.sender;
     bob = _bob;
     carol = _carol;
   }
