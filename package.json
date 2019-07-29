@@ -6,7 +6,9 @@
   "directories": {
     "test": "test"
   },
-  "dependencies": {},
+  "dependencies": {
+    "truffle-hdwallet-provider": "^1.0.15"
+  },
   "devDependencies": {
     "truffle-assertions": "^0.9.1"
   },
