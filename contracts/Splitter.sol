@@ -6,6 +6,8 @@ contract Splitter {
   address payable public carol;
 
   constructor(address payable _bob, address payable _carol) public {
+    require(_bob != address(0), "Bob must not be 0x0000000000000000000000000000000000000000!");
+    require(_carol != address(0), "Carol must not be 0x0000000000000000000000000000000000000000!");
     alice = msg.sender;
     bob = _bob;
     carol = _carol;
