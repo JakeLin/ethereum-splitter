@@ -29,4 +29,19 @@ contract Splitter {
     bobBalance += half;
     carolBalance += half;
   }
+
+  function withdraw() external {
+    require(msg.sender == bob || msg.sender == carol, "Only Bob or Carol can withdraw!");
+    if (msg.sender == bob) {
+      require(bobBalance > 0, "Bob's balance must be grater than zero!");
+      uint256 tempBobBalance = bobBalance;
+      bobBalance = 0;
+      msg.sender.transfer(tempBobBalance);
+    } else if (msg.sender == carol) {
+      require(carolBalance > 0, "Carol's balance must be grater than zero!");
+      uint256 tempCarolBalance = carolBalance;
+      carolBalance = 0;
+      msg.sender.transfer(tempCarolBalance);
+    }
+  }
 }
