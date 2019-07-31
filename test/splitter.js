@@ -31,29 +31,20 @@ contract('Splitter', accounts => {
 
 
   context('When Alice splits 0.02 ether (the number is even)', () => {
-    let bobBalanceBeforeSplit;
-    let carolBalanceBeforeSplit;
-
     beforeEach(async () => {
-      // Arrange
-      bobBalanceBeforeSplit = await web3.eth.getBalance(bob);
-      carolBalanceBeforeSplit = await web3.eth.getBalance(carol);
-      
-      // Act
+      // Arrange & Act
       await contract.methods.split().send({from: alice, value: web3.utils.toWei('0.02', 'ether')});
     });
 
-    it('should split the ether to Bob and Carol evenly', async () => {
+    it('should split the ether to Bob and Carol\'s balance evenly', async () => {
       // Assert
-      const bobBalanceAfterSplit = await web3.eth.getBalance(bob);
-      const carolBalanceAfterSplit = await web3.eth.getBalance(carol);
-      const bobBalanceDiff = bobBalanceAfterSplit - bobBalanceBeforeSplit;
-      const carolBalanceDiff = carolBalanceAfterSplit - carolBalanceBeforeSplit;
+      assert.equal((await contract.methods.bobBalance().call()), web3.utils.toWei('0.01', 'ether'));
+      assert.equal((await contract.methods.carolBalance().call()), web3.utils.toWei('0.01', 'ether'));
+    });
 
-      assert.equal(bobBalanceDiff, carolBalanceDiff); 
-      assert.equal(bobBalanceDiff, web3.utils.toWei('0.01', 'ether')); 
-      assert.equal(carolBalanceDiff, web3.utils.toWei('0.01', 'ether'));
-      assert.equal(bobBalanceDiff + carolBalanceDiff, web3.utils.toWei('0.02', 'ether'));
+    it('the contract balance should increase 0.02 ether', async () => {
+      // Assert
+      assert.equal((await web3.eth.getBalance(contract.options.address)), web3.utils.toWei('0.02', 'ether'));
     });
   });
 
