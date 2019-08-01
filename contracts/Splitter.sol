@@ -1,6 +1,10 @@
 pragma solidity >=0.4.21 <0.6.0;
 
+import "./SafeMath.sol";
+
 contract Splitter {
+  using SafeMath for uint256;
+
   address public alice;
   address public bob;
   address public carol;
@@ -23,11 +27,11 @@ contract Splitter {
 
   function split() external payable onlyAlice() {
     require(msg.value > 0, "Must split more than zero ether!");
-    require(msg.value % 2 == 0, "The ether to be splitted must be even!");
+    require(msg.value.mod(2) == 0, "The ether to be splitted must be even!");
 
-    uint256 half = msg.value / 2;
-    bobBalance += half;
-    carolBalance += half;
+    uint256 half = msg.value.div(2);
+    bobBalance = bobBalance.add(half);
+    carolBalance = carolBalance.add(half);
   }
 
   function withdraw() external {
