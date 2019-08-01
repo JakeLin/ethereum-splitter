@@ -1,7 +1,7 @@
 const truffleAssert = require('truffle-assertions');
 const Splitter = artifacts.require('Splitter');
 
-const BN = web3.utils.BN;
+const { BN, toWei } = web3.utils;
 
 // const zeroAddress = '0x0000000000000000000000000000000000000000';
 
@@ -35,18 +35,18 @@ contract('Splitter', accounts => {
   context('When Alice splits 0.02 ether (the number is even)', () => {
     beforeEach(async () => {
       // Arrange & Act
-      await contract.methods.split().send({from: alice, value: web3.utils.toWei('0.02', 'ether')});
+      await contract.methods.split().send({from: alice, value: toWei('0.02', 'ether')});
     });
 
     it('should split the ether to Bob and Carol\'s balance evenly', async () => {
       // Assert
-      assert.equal((await contract.methods.bobBalance().call()), web3.utils.toWei('0.01', 'ether'));
-      assert.equal((await contract.methods.carolBalance().call()), web3.utils.toWei('0.01', 'ether'));
+      assert.equal((await contract.methods.bobBalance().call()), toWei('0.01', 'ether'));
+      assert.equal((await contract.methods.carolBalance().call()), toWei('0.01', 'ether'));
     });
 
     it('the contract balance should increase 0.02 ether', async () => {
       // Assert
-      assert.equal((await web3.eth.getBalance(contract.options.address)), web3.utils.toWei('0.02', 'ether'));
+      assert.equal((await web3.eth.getBalance(contract.options.address)), toWei('0.02', 'ether'));
     });
   });
 
@@ -75,7 +75,7 @@ contract('Splitter', accounts => {
     beforeEach(async () => {
       // Arrange
       bobBeforeWithdrawBalance = new BN(await web3.eth.getBalance(bob));
-      await contract.methods.split().send({from: alice, value: web3.utils.toWei('0.06', 'ether')});
+      await contract.methods.split().send({from: alice, value: toWei('0.06', 'ether')});
 
       // Act
       await contract.methods.withdraw().send({from: bob});
@@ -93,7 +93,7 @@ contract('Splitter', accounts => {
 
     it('the contract balance should decrease 0.03 ether', async () => {
       // Assert
-      assert.equal((await web3.eth.getBalance(contract.options.address)), web3.utils.toWei('0.03', 'ether'));
+      assert.equal((await web3.eth.getBalance(contract.options.address)), toWei('0.03', 'ether'));
     });
   });
 
@@ -102,7 +102,7 @@ contract('Splitter', accounts => {
     beforeEach(async () => {
       // Arrange
       carolBeforeWithdrawBalance = new BN(await web3.eth.getBalance(carol));
-      await contract.methods.split().send({from: alice, value: web3.utils.toWei('0.06', 'ether')});
+      await contract.methods.split().send({from: alice, value: toWei('0.06', 'ether')});
 
       // Act
       await contract.methods.withdraw().send({from: carol});
@@ -120,7 +120,7 @@ contract('Splitter', accounts => {
 
     it('the contract balance should decrease 0.03 ether', async () => {
       // Assert
-      assert.equal((await web3.eth.getBalance(contract.options.address)), web3.utils.toWei('0.03', 'ether'));
+      assert.equal((await web3.eth.getBalance(contract.options.address)), toWei('0.03', 'ether'));
     });
   });
 
@@ -147,7 +147,7 @@ contract('Splitter', accounts => {
       // Arrange
       bobBeforeWithdrawBalance = new BN(await web3.eth.getBalance(bob));
       carolBeforeWithdrawBalance = new BN(await web3.eth.getBalance(carol));
-      await contract.methods.split().send({from: alice, value: web3.utils.toWei('0.06', 'ether')});
+      await contract.methods.split().send({from: alice, value: toWei('0.06', 'ether')});
     });
 
     it('should fail to withdraw', async () => {
