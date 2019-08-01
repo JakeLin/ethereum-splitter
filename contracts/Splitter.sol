@@ -9,8 +9,8 @@ contract Splitter {
   uint256 public carolBalance;
 
   constructor(address _bob, address _carol) public {
-    require(_bob != address(0), "Bob must not be 0x0000000000000000000000000000000000000000!");
-    require(_carol != address(0), "Carol must not be 0x0000000000000000000000000000000000000000!");
+    require(_bob != address(0), "Bob must not be zero!");
+    require(_carol != address(0), "Carol must not be zero!");
     alice = msg.sender;
     bob = _bob;
     carol = _carol;
