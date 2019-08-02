@@ -5,6 +5,10 @@ import "./SafeMath.sol";
 contract Splitter {
   using SafeMath for uint256;
 
+  event LogAliceSplitted(uint256 amount);
+  event LogBobWithdrawn(uint256 amount);
+  event LogCarolWithdrawn(uint256 amount);
+
   address public alice;
   address public bob;
   address public carol;
@@ -32,6 +36,7 @@ contract Splitter {
     uint256 half = msg.value.div(2);
     bobBalance = bobBalance.add(half);
     carolBalance = carolBalance.add(half);
+    emit LogAliceSplitted(msg.value);
   }
 
   function withdraw() external {
@@ -41,11 +46,13 @@ contract Splitter {
       require(tempBobBalance > 0, "Bob's balance must be grater than zero!");
       bobBalance = 0;
       msg.sender.transfer(tempBobBalance);
+      emit LogBobWithdrawn(tempBobBalance);
     } else if (msg.sender == carol) {
       uint256 tempCarolBalance = carolBalance;
       require(tempCarolBalance > 0, "Carol's balance must be grater than zero!");
       carolBalance = 0;
       msg.sender.transfer(tempCarolBalance);
+      emit LogCarolWithdrawn(tempCarolBalance);
     }
   }
 }
