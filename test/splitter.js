@@ -15,9 +15,9 @@ contract('Splitter', accounts => {
 
   it('should deploy the contract correctly', async () => {
     assert.ok(contract);
-    assert.equal((await contract.methods.alice().call()), alice);
-    assert.equal((await contract.methods.bob().call()), bob);
-    assert.equal((await contract.methods.carol().call()), carol);
+    assert.strictEqual((await contract.methods.alice().call()), alice);
+    assert.strictEqual((await contract.methods.bob().call()), bob);
+    assert.strictEqual((await contract.methods.carol().call()), carol);
   });
 
   // The VM throws revert error, but `truffleAssert.reverts` can't catch it properly. So comment it for now
@@ -41,19 +41,19 @@ contract('Splitter', accounts => {
 
     it('should split the ether to Bob and Carol\'s balance evenly', async () => {
       // Assert
-      assert.equal((await contract.methods.bobBalance().call()), toWei('0.01', 'ether'));
-      assert.equal((await contract.methods.carolBalance().call()), toWei('0.01', 'ether'));
+      assert.strictEqual((await contract.methods.bobBalance().call()), toWei('0.01', 'ether'));
+      assert.strictEqual((await contract.methods.carolBalance().call()), toWei('0.01', 'ether'));
     });
 
     it('the contract balance should increase 0.02 ether', async () => {
       // Assert
-      assert.equal((await web3.eth.getBalance(contract.options.address)), toWei('0.02', 'ether'));
+      assert.strictEqual((await web3.eth.getBalance(contract.options.address)), toWei('0.02', 'ether'));
     });
 
     it('should emit the LogAliceSplitted event', async () => {
       // Assert
-      assert.equal(tx.events.LogAliceSplitted.event, 'LogAliceSplitted');
-      assert.equal(tx.events.LogAliceSplitted.returnValues.amount, toWei('0.02', 'ether'));
+      assert.strictEqual(tx.events.LogAliceSplitted.event, 'LogAliceSplitted');
+      assert.strictEqual(tx.events.LogAliceSplitted.returnValues.amount, toWei('0.02', 'ether'));
     });
   });
 
@@ -98,18 +98,18 @@ contract('Splitter', accounts => {
 
     it('Bob\'s balance in the contract should set to zero', async () => {
       // Assert
-      assert.equal((await contract.methods.bobBalance().call()), 0);
+      assert.strictEqual((await contract.methods.bobBalance().call()), '0');
     });
 
     it('the contract balance should decrease 0.03 ether', async () => {
       // Assert
-      assert.equal((await web3.eth.getBalance(contract.options.address)), toWei('0.03', 'ether'));
+      assert.strictEqual((await web3.eth.getBalance(contract.options.address)), toWei('0.03', 'ether'));
     });
 
     it('should emit the LogBobWithdrawn event', async () => {
       // Assert
-      assert.equal(tx.events.LogBobWithdrawn.event, 'LogBobWithdrawn');
-      assert.equal(tx.events.LogBobWithdrawn.returnValues.amount, toWei('0.03', 'ether'));
+      assert.strictEqual(tx.events.LogBobWithdrawn.event, 'LogBobWithdrawn');
+      assert.strictEqual(tx.events.LogBobWithdrawn.returnValues.amount, toWei('0.03', 'ether'));
     });
   });
 
@@ -134,18 +134,18 @@ contract('Splitter', accounts => {
 
     it('Carol\'s balance in the contract should set to zero', async () => {
       // Assert
-      assert.equal((await contract.methods.carolBalance().call()), 0);
+      assert.strictEqual((await contract.methods.carolBalance().call()), '0');
     });
 
     it('the contract balance should decrease 0.03 ether', async () => {
       // Assert
-      assert.equal((await web3.eth.getBalance(contract.options.address)), toWei('0.03', 'ether'));
+      assert.strictEqual((await web3.eth.getBalance(contract.options.address)), toWei('0.03', 'ether'));
     });
 
     it('should emit the LogCarolWithdrawn event', async () => {
       // Assert
-      assert.equal(tx.events.LogCarolWithdrawn.event, 'LogCarolWithdrawn');
-      assert.equal(tx.events.LogCarolWithdrawn.returnValues.amount, toWei('0.03', 'ether'));
+      assert.strictEqual(tx.events.LogCarolWithdrawn.event, 'LogCarolWithdrawn');
+      assert.strictEqual(tx.events.LogCarolWithdrawn.returnValues.amount, toWei('0.03', 'ether'));
     });
   });
 
