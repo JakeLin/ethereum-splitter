@@ -1,7 +1,7 @@
 const truffleAssert = require('truffle-assertions');
 const Splitter = artifacts.require('Splitter');
 
-const { BN, toWei } = web3.utils;
+const { toBN, toWei } = web3.utils;
 
 // const zeroAddress = '0x0000000000000000000000000000000000000000';
 
@@ -82,7 +82,7 @@ contract('Splitter', accounts => {
     let tx;
     beforeEach(async () => {
       // Arrange
-      bobBeforeWithdrawBalance = new BN(await web3.eth.getBalance(bob));
+      bobBeforeWithdrawBalance = toBN(await web3.eth.getBalance(bob));
       await contract.methods.split().send({from: alice, value: toWei('0.06', 'ether')});
 
       // Act
@@ -91,7 +91,9 @@ contract('Splitter', accounts => {
 
     it('should withdraw the ether to Bob\'s account', async () => {
       // Assert
-      assert.ok(new BN(await web3.eth.getBalance(bob)).gt(bobBeforeWithdrawBalance), 'balance should increase after withdraw');
+      const gasPrice = toBN(await web3.eth.getGasPrice());
+      const gasFee = toBN(tx.gasUsed).mul(gasPrice);
+      assert.strictEqual(toBN((await web3.eth.getBalance(bob))).sub(bobBeforeWithdrawBalance).toString(10), toBN(toWei('0.03', 'ether')).sub(gasFee).toString(10));
     });
 
     it('Bob\'s balance in the contract should set to zero', async () => {
@@ -116,7 +118,7 @@ contract('Splitter', accounts => {
     let tx;
     beforeEach(async () => {
       // Arrange
-      carolBeforeWithdrawBalance = new BN(await web3.eth.getBalance(carol));
+      carolBeforeWithdrawBalance = toBN(await web3.eth.getBalance(carol));
       await contract.methods.split().send({from: alice, value: toWei('0.06', 'ether')});
 
       // Act
@@ -125,7 +127,9 @@ contract('Splitter', accounts => {
 
     it('should withdraw the ether to Carol\'s account', async () => {
       // Assert
-      assert.ok(new BN(await web3.eth.getBalance(carol)).gt(carolBeforeWithdrawBalance), 'balance should increase after withdraw');
+      const gasPrice = toBN(await web3.eth.getGasPrice());
+      const gasFee = toBN(tx.gasUsed).mul(gasPrice);
+      assert.strictEqual(toBN((await web3.eth.getBalance(carol))).sub(carolBeforeWithdrawBalance).toString(10), toBN(toWei('0.03', 'ether')).sub(gasFee).toString(10));
     });
 
     it('Carol\'s balance in the contract should set to zero', async () => {
@@ -166,8 +170,6 @@ contract('Splitter', accounts => {
   context('When someone else withdraws', () => {
     beforeEach(async () => {
       // Arrange
-      bobBeforeWithdrawBalance = new BN(await web3.eth.getBalance(bob));
-      carolBeforeWithdrawBalance = new BN(await web3.eth.getBalance(carol));
       await contract.methods.split().send({from: alice, value: toWei('0.06', 'ether')});
     });
 
