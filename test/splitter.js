@@ -1,7 +1,7 @@
 const truffleAssert = require('truffle-assertions');
 const Splitter = artifacts.require('Splitter');
 
-const BN = web3.utils.BN;
+const { toBN, toWei } = web3.utils;
 
 // const zeroAddress = '0x0000000000000000000000000000000000000000';
 
@@ -15,9 +15,9 @@ contract('Splitter', accounts => {
 
   it('should deploy the contract correctly', async () => {
     assert.ok(contract);
-    assert.equal((await contract.methods.alice().call()), alice);
-    assert.equal((await contract.methods.bob().call()), bob);
-    assert.equal((await contract.methods.carol().call()), carol);
+    assert.strictEqual((await contract.methods.alice().call()), alice);
+    assert.strictEqual((await contract.methods.bob().call()), bob);
+    assert.strictEqual((await contract.methods.carol().call()), carol);
   });
 
   // The VM throws revert error, but `truffleAssert.reverts` can't catch it properly. So comment it for now
@@ -33,20 +33,27 @@ contract('Splitter', accounts => {
 
 
   context('When Alice splits 0.02 ether (the number is even)', () => {
+    let tx;
     beforeEach(async () => {
       // Arrange & Act
-      await contract.methods.split().send({from: alice, value: web3.utils.toWei('0.02', 'ether')});
+      tx = await contract.methods.split().send({from: alice, value: toWei('0.02', 'ether')});
     });
 
     it('should split the ether to Bob and Carol\'s balance evenly', async () => {
       // Assert
-      assert.equal((await contract.methods.bobBalance().call()), web3.utils.toWei('0.01', 'ether'));
-      assert.equal((await contract.methods.carolBalance().call()), web3.utils.toWei('0.01', 'ether'));
+      assert.strictEqual((await contract.methods.bobBalance().call()), toWei('0.01', 'ether'));
+      assert.strictEqual((await contract.methods.carolBalance().call()), toWei('0.01', 'ether'));
     });
 
     it('the contract balance should increase 0.02 ether', async () => {
       // Assert
-      assert.equal((await web3.eth.getBalance(contract.options.address)), web3.utils.toWei('0.02', 'ether'));
+      assert.strictEqual((await web3.eth.getBalance(contract.options.address)), toWei('0.02', 'ether'));
+    });
+
+    it('should emit the LogAliceSplitted event', async () => {
+      // Assert
+      assert.strictEqual(tx.events.LogAliceSplitted.event, 'LogAliceSplitted');
+      assert.strictEqual(tx.events.LogAliceSplitted.returnValues.amount, toWei('0.02', 'ether'));
     });
   });
 
@@ -72,55 +79,73 @@ contract('Splitter', accounts => {
 
   context('When Bob withdraws', () => {
     let bobBeforeWithdrawBalance;
+    let tx;
     beforeEach(async () => {
       // Arrange
-      bobBeforeWithdrawBalance = new BN(await web3.eth.getBalance(bob));
-      await contract.methods.split().send({from: alice, value: web3.utils.toWei('0.06', 'ether')});
+      bobBeforeWithdrawBalance = toBN(await web3.eth.getBalance(bob));
+      await contract.methods.split().send({from: alice, value: toWei('0.06', 'ether')});
 
       // Act
-      await contract.methods.withdraw().send({from: bob});
+      tx = await contract.methods.withdraw().send({from: bob});
     });
 
     it('should withdraw the ether to Bob\'s account', async () => {
       // Assert
-      assert.ok(new BN(await web3.eth.getBalance(bob)).gt(bobBeforeWithdrawBalance), 'balance should increase after withdraw');
+      const gasPrice = toBN(await web3.eth.getGasPrice());
+      const gasFee = toBN(tx.gasUsed).mul(gasPrice);
+      assert.strictEqual(toBN((await web3.eth.getBalance(bob))).sub(bobBeforeWithdrawBalance).toString(10), toBN(toWei('0.03', 'ether')).sub(gasFee).toString(10));
     });
 
     it('Bob\'s balance in the contract should set to zero', async () => {
       // Assert
-      assert.equal((await contract.methods.bobBalance().call()), 0);
+      assert.strictEqual((await contract.methods.bobBalance().call()), '0');
     });
 
     it('the contract balance should decrease 0.03 ether', async () => {
       // Assert
-      assert.equal((await web3.eth.getBalance(contract.options.address)), web3.utils.toWei('0.03', 'ether'));
+      assert.strictEqual((await web3.eth.getBalance(contract.options.address)), toWei('0.03', 'ether'));
+    });
+
+    it('should emit the LogBobWithdrawn event', async () => {
+      // Assert
+      assert.strictEqual(tx.events.LogBobWithdrawn.event, 'LogBobWithdrawn');
+      assert.strictEqual(tx.events.LogBobWithdrawn.returnValues.amount, toWei('0.03', 'ether'));
     });
   });
 
   context('When Carol withdraws', () => {
     let carolBeforeWithdrawBalance;
+    let tx;
     beforeEach(async () => {
       // Arrange
-      carolBeforeWithdrawBalance = new BN(await web3.eth.getBalance(carol));
-      await contract.methods.split().send({from: alice, value: web3.utils.toWei('0.06', 'ether')});
+      carolBeforeWithdrawBalance = toBN(await web3.eth.getBalance(carol));
+      await contract.methods.split().send({from: alice, value: toWei('0.06', 'ether')});
 
       // Act
-      await contract.methods.withdraw().send({from: carol});
+      tx = await contract.methods.withdraw().send({from: carol});
     });
 
     it('should withdraw the ether to Carol\'s account', async () => {
       // Assert
-      assert.ok(new BN(await web3.eth.getBalance(carol)).gt(carolBeforeWithdrawBalance), 'balance should increase after withdraw');
+      const gasPrice = toBN(await web3.eth.getGasPrice());
+      const gasFee = toBN(tx.gasUsed).mul(gasPrice);
+      assert.strictEqual(toBN((await web3.eth.getBalance(carol))).sub(carolBeforeWithdrawBalance).toString(10), toBN(toWei('0.03', 'ether')).sub(gasFee).toString(10));
     });
 
     it('Carol\'s balance in the contract should set to zero', async () => {
       // Assert
-      assert.equal((await contract.methods.carolBalance().call()), 0);
+      assert.strictEqual((await contract.methods.carolBalance().call()), '0');
     });
 
     it('the contract balance should decrease 0.03 ether', async () => {
       // Assert
-      assert.equal((await web3.eth.getBalance(contract.options.address)), web3.utils.toWei('0.03', 'ether'));
+      assert.strictEqual((await web3.eth.getBalance(contract.options.address)), toWei('0.03', 'ether'));
+    });
+
+    it('should emit the LogCarolWithdrawn event', async () => {
+      // Assert
+      assert.strictEqual(tx.events.LogCarolWithdrawn.event, 'LogCarolWithdrawn');
+      assert.strictEqual(tx.events.LogCarolWithdrawn.returnValues.amount, toWei('0.03', 'ether'));
     });
   });
 
@@ -145,9 +170,7 @@ contract('Splitter', accounts => {
   context('When someone else withdraws', () => {
     beforeEach(async () => {
       // Arrange
-      bobBeforeWithdrawBalance = new BN(await web3.eth.getBalance(bob));
-      carolBeforeWithdrawBalance = new BN(await web3.eth.getBalance(carol));
-      await contract.methods.split().send({from: alice, value: web3.utils.toWei('0.06', 'ether')});
+      await contract.methods.split().send({from: alice, value: toWei('0.06', 'ether')});
     });
 
     it('should fail to withdraw', async () => {
