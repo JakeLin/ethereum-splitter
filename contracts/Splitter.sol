@@ -9,7 +9,7 @@ contract Splitter {
   event LogBobWithdrawn(uint256 amount);
   event LogCarolWithdrawn(uint256 amount);
 
-  address public alice;
+  address public owner;
   address public bob;
   address public carol;
 
@@ -19,17 +19,17 @@ contract Splitter {
   constructor(address _bob, address _carol) public {
     require(_bob != address(0), "Bob must not be zero!");
     require(_carol != address(0), "Carol must not be zero!");
-    alice = msg.sender;
+    owner = msg.sender;
     bob = _bob;
     carol = _carol;
   }
 
-  modifier onlyAlice() {
-    require (msg.sender == alice, "Only Alice can split!");
+  modifier onlyOwner() {
+    require (msg.sender == owner, "Only owner can split!");
     _;
   }
 
-  function split() external payable onlyAlice() {
+  function split() external payable onlyOwner() {
     require(msg.value > 0, "Must split more than zero ether!");
     require(msg.value.mod(2) == 0, "The ether to be splitted must be even!");
 

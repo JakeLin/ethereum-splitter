@@ -6,16 +6,16 @@ const { toBN, toWei } = web3.utils;
 // const zeroAddress = '0x0000000000000000000000000000000000000000';
 
 contract('Splitter', accounts => {
-  const [alice, bob, carol, someoneElse] = accounts;
+  const [owner, bob, carol, someoneElse] = accounts;
 
   let contract;
   beforeEach(async () => {
-    contract = (await Splitter.new(bob, carol, { from: alice, gas: 3000000 })).contract;
+    contract = (await Splitter.new(bob, carol, { from: owner, gas: 3000000 })).contract;
   });
 
   it('should deploy the contract correctly', async () => {
     assert.ok(contract);
-    assert.strictEqual((await contract.methods.alice().call()), alice);
+    assert.strictEqual((await contract.methods.owner().call()), owner);
     assert.strictEqual((await contract.methods.bob().call()), bob);
     assert.strictEqual((await contract.methods.carol().call()), carol);
   });
@@ -25,18 +25,18 @@ contract('Splitter', accounts => {
   // context('When set bob address as 0x0000000000000000000000000000000000000000', () => {
   //   it('should fail to deploy the contract', async () => {
   //     await truffleAssert.reverts(
-  //       Splitter.new(zeroAddress, carol, { from: alice, gas: 3000000 }).contract,
+  //       Splitter.new(zeroAddress, carol, { from: owner, gas: 3000000 }).contract,
   //       'Bob must not be 0x0000000000000000000000000000000000000000!'
   //     );
   //   });
   // });
 
 
-  context('When Alice splits 0.02 ether (the number is even)', () => {
+  context('When owner splits 0.02 ether (the number is even)', () => {
     let tx;
     beforeEach(async () => {
       // Arrange & Act
-      tx = await contract.methods.split().send({from: alice, value: toWei('0.02', 'ether')});
+      tx = await contract.methods.split().send({from: owner, value: toWei('0.02', 'ether')});
     });
 
     it('should split the ether to Bob and Carol\'s balance evenly', async () => {
@@ -57,22 +57,22 @@ contract('Splitter', accounts => {
     });
   });
 
-  context('When Alice splits 3 wei (the number is odd)', () => {
+  context('When owner splits 3 wei (the number is odd)', () => {
     it('should not split the ether to Bob and Carol', async () => {
       // Act & Assert
       await truffleAssert.reverts(
-        contract.methods.split().send({from: alice, value: 3}),
+        contract.methods.split().send({from: owner, value: 3}),
         'The ether to be splitted must be even!'
       );
     });
   });
 
-  context('When not Alice splits', () => {
+  context('When not owner splits', () => {
     it('should not split the ether to Bob and Carol', async () => {
       // Act & Assert
       await truffleAssert.reverts(
         contract.methods.split().send({from: someoneElse, value: 2}),
-        'Only Alice can split!'
+        'Only owner can split!'
       );
     });
   });
@@ -83,7 +83,7 @@ contract('Splitter', accounts => {
     beforeEach(async () => {
       // Arrange
       bobBeforeWithdrawBalance = toBN(await web3.eth.getBalance(bob));
-      await contract.methods.split().send({from: alice, value: toWei('0.06', 'ether')});
+      await contract.methods.split().send({from: owner, value: toWei('0.06', 'ether')});
 
       // Act
       tx = await contract.methods.withdraw().send({from: bob});
@@ -119,7 +119,7 @@ contract('Splitter', accounts => {
     beforeEach(async () => {
       // Arrange
       carolBeforeWithdrawBalance = toBN(await web3.eth.getBalance(carol));
-      await contract.methods.split().send({from: alice, value: toWei('0.06', 'ether')});
+      await contract.methods.split().send({from: owner, value: toWei('0.06', 'ether')});
 
       // Act
       tx = await contract.methods.withdraw().send({from: carol});
@@ -170,7 +170,7 @@ contract('Splitter', accounts => {
   context('When someone else withdraws', () => {
     beforeEach(async () => {
       // Arrange
-      await contract.methods.split().send({from: alice, value: toWei('0.06', 'ether')});
+      await contract.methods.split().send({from: owner, value: toWei('0.06', 'ether')});
     });
 
     it('should fail to withdraw', async () => {
