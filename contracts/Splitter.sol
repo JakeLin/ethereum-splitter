@@ -5,23 +5,14 @@ import "./SafeMath.sol";
 contract Splitter {
   using SafeMath for uint256;
 
-  event LogAliceSplitted(uint256 amount);
-  event LogBobWithdrawn(uint256 amount);
-  event LogCarolWithdrawn(uint256 amount);
+  event LogSplitted(address indexed sender, uint256 amount, address indexed beneficiary1, address indexed beneficiary2);
+  event LogWithdrawn(address indexed sender, uint256 amount);
 
   address public owner;
-  address public bob;
-  address public carol;
+  mapping (address => uint256) public beneficiaries;
 
-  uint256 public bobBalance;
-  uint256 public carolBalance;
-
-  constructor(address _bob, address _carol) public {
-    require(_bob != address(0), "Bob must not be zero!");
-    require(_carol != address(0), "Carol must not be zero!");
+  constructor() public {
     owner = msg.sender;
-    bob = _bob;
-    carol = _carol;
   }
 
   modifier onlyOwner() {
@@ -29,30 +20,31 @@ contract Splitter {
     _;
   }
 
-  function split() external payable onlyOwner() {
+  function split(address _beneficiary1, address _beneficiary2) external payable onlyOwner() {
+    require(_beneficiary1 != address(0) && _beneficiary2 != address(0), "Beneficiary's address must not be zero!");
     require(msg.value > 0, "Must split more than zero ether!");
     require(msg.value.mod(2) == 0, "The ether to be splitted must be even!");
 
     uint256 half = msg.value.div(2);
-    bobBalance = bobBalance.add(half);
-    carolBalance = carolBalance.add(half);
-    emit LogAliceSplitted(msg.value);
+    beneficiaries[_beneficiary1] = beneficiaries[_beneficiary1].add(half);
+    beneficiaries[_beneficiary2] = beneficiaries[_beneficiary2].add(half);
+    emit LogSplitted(msg.sender, msg.value, _beneficiary1, _beneficiary2);
   }
 
-  function withdraw() external {
-    require(msg.sender == bob || msg.sender == carol, "Only Bob or Carol can withdraw!");
-    if (msg.sender == bob) {
-      uint256 tempBobBalance = bobBalance;
-      require(tempBobBalance > 0, "Bob's balance must be grater than zero!");
-      bobBalance = 0;
-      msg.sender.transfer(tempBobBalance);
-      emit LogBobWithdrawn(tempBobBalance);
-    } else if (msg.sender == carol) {
-      uint256 tempCarolBalance = carolBalance;
-      require(tempCarolBalance > 0, "Carol's balance must be grater than zero!");
-      carolBalance = 0;
-      msg.sender.transfer(tempCarolBalance);
-      emit LogCarolWithdrawn(tempCarolBalance);
-    }
-  }
+  // function withdraw() external {
+  //   require(msg.sender == bob || msg.sender == carol, "Only Bob or Carol can withdraw!");
+  //   if (msg.sender == bob) {
+  //     uint256 tempBobBalance = bobBalance;
+  //     require(tempBobBalance > 0, "Bob's balance must be grater than zero!");
+  //     bobBalance = 0;
+  //     msg.sender.transfer(tempBobBalance);
+  //     emit LogBobWithdrawn(tempBobBalance);
+  //   } else if (msg.sender == carol) {
+  //     uint256 tempCarolBalance = carolBalance;
+  //     require(tempCarolBalance > 0, "Carol's balance must be grater than zero!");
+  //     carolBalance = 0;
+  //     msg.sender.transfer(tempCarolBalance);
+  //     emit LogCarolWithdrawn(tempCarolBalance);
+  //   }
+  // }
 }
