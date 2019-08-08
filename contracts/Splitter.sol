@@ -9,7 +9,7 @@ contract Splitter {
   event LogWithdrawn(address indexed sender, uint256 amount);
 
   address public owner;
-  mapping (address => uint256) public beneficiaries;
+  mapping (address => uint256) public balances;
 
   constructor() public {
     owner = msg.sender;
@@ -26,15 +26,15 @@ contract Splitter {
     require(msg.value.mod(2) == 0, "The ether to be splitted must be even!");
 
     uint256 half = msg.value.div(2);
-    beneficiaries[_beneficiary1] = beneficiaries[_beneficiary1].add(half);
-    beneficiaries[_beneficiary2] = beneficiaries[_beneficiary2].add(half);
+    balances[_beneficiary1] = balances[_beneficiary1].add(half);
+    balances[_beneficiary2] = balances[_beneficiary2].add(half);
     emit LogSplitted(msg.sender, msg.value, _beneficiary1, _beneficiary2);
   }
 
   function withdraw() external {
-    uint256 balanceToWithdraw = beneficiaries[msg.sender];
+    uint256 balanceToWithdraw = balances[msg.sender];
     require(balanceToWithdraw > 0, "Balance must be grater than zero to withdraw!");
-    beneficiaries[msg.sender] = 0;
+    balances[msg.sender] = 0;
     emit LogWithdrawn(msg.sender, balanceToWithdraw);
     msg.sender.transfer(balanceToWithdraw);
   }

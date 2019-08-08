@@ -27,8 +27,8 @@ contract('Splitter', accounts => {
 
     it('should split the ether to Bob and Carol\'s balance evenly', async () => {
       // Assert
-      assert.strictEqual((await contract.methods.beneficiaries(bob).call()), toWei('0.01', 'ether'));
-      assert.strictEqual((await contract.methods.beneficiaries(carol).call()), toWei('0.01', 'ether'));
+      assert.strictEqual((await contract.methods.balances(bob).call()), toWei('0.01', 'ether'));
+      assert.strictEqual((await contract.methods.balances(carol).call()), toWei('0.01', 'ether'));
     });
 
     it('the contract balance should increase 0.02 ether', async () => {
@@ -102,10 +102,10 @@ contract('Splitter', accounts => {
 
     it('Bob\'s balance in the contract should set to zero', async () => {
       // Assert
-      assert.strictEqual((await contract.methods.beneficiaries(bob).call()), '0');
+      assert.strictEqual((await contract.methods.balances(bob).call()), '0');
     });
 
-    it('the contract balance should decrease 0.03 ether', async () => {
+    it('the contract balance should decrease to 0.03 ether', async () => {
       // Assert
       assert.strictEqual((await web3.eth.getBalance(contract.options.address)), toWei('0.03', 'ether'));
     });
