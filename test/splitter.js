@@ -81,108 +81,65 @@ contract('Splitter', accounts => {
     });
   });
 
-  // context('When Bob withdraws', () => {
-  //   let bobBeforeWithdrawBalance;
-  //   let tx;
-  //   beforeEach(async () => {
-  //     // Arrange
-  //     bobBeforeWithdrawBalance = toBN(await web3.eth.getBalance(bob));
-  //     await contract.methods.split().send({from: owner, value: toWei('0.06', 'ether')});
+  context('When the beneficiary withdraws', () => {
+    let bobBeforeWithdrawBalance;
+    let tx;
+    beforeEach(async () => {
+      // Arrange
+      bobBeforeWithdrawBalance = toBN(await web3.eth.getBalance(bob));
+      await contract.methods.split(bob, carol).send({from: owner, value: toWei('0.06', 'ether')});
 
-  //     // Act
-  //     tx = await contract.methods.withdraw().send({from: bob});
-  //   });
+      // Act
+      tx = await contract.methods.withdraw().send({from: bob});
+    });
 
-  //   it('should withdraw the ether to Bob\'s account', async () => {
-  //     // Assert
-  //     const gasPrice = toBN(await web3.eth.getGasPrice());
-  //     const gasFee = toBN(tx.gasUsed).mul(gasPrice);
-  //     assert.strictEqual(toBN((await web3.eth.getBalance(bob))).sub(bobBeforeWithdrawBalance).toString(10), toBN(toWei('0.03', 'ether')).sub(gasFee).toString(10));
-  //   });
+    it('should withdraw the ether to Bob\'s account', async () => {
+      // Assert
+      const gasPrice = toBN(await web3.eth.getGasPrice());
+      const gasFee = toBN(tx.gasUsed).mul(gasPrice);
+      assert.strictEqual(toBN((await web3.eth.getBalance(bob))).sub(bobBeforeWithdrawBalance).toString(10), toBN(toWei('0.03', 'ether')).sub(gasFee).toString(10));
+    });
 
-  //   it('Bob\'s balance in the contract should set to zero', async () => {
-  //     // Assert
-  //     assert.strictEqual((await contract.methods.bobBalance().call()), '0');
-  //   });
+    it('Bob\'s balance in the contract should set to zero', async () => {
+      // Assert
+      assert.strictEqual((await contract.methods.beneficiaries(bob).call()), '0');
+    });
 
-  //   it('the contract balance should decrease 0.03 ether', async () => {
-  //     // Assert
-  //     assert.strictEqual((await web3.eth.getBalance(contract.options.address)), toWei('0.03', 'ether'));
-  //   });
+    it('the contract balance should decrease 0.03 ether', async () => {
+      // Assert
+      assert.strictEqual((await web3.eth.getBalance(contract.options.address)), toWei('0.03', 'ether'));
+    });
 
-  //   it('should emit the LogBobWithdrawn event', async () => {
-  //     // Assert
-  //     assert.strictEqual(tx.events.LogBobWithdrawn.event, 'LogBobWithdrawn');
-  //     assert.strictEqual(tx.events.LogBobWithdrawn.returnValues.amount, toWei('0.03', 'ether'));
-  //   });
-  // });
+    it('should emit the LogWithdrawn event', async () => {
+      // Assert
+      assert.strictEqual(tx.events.LogWithdrawn.event, 'LogWithdrawn');
+      assert.strictEqual(tx.events.LogWithdrawn.returnValues.sender, bob);
+      assert.strictEqual(tx.events.LogWithdrawn.returnValues.amount, toWei('0.03', 'ether'));
+    });
+  });
 
-  // context('When Carol withdraws', () => {
-  //   let carolBeforeWithdrawBalance;
-  //   let tx;
-  //   beforeEach(async () => {
-  //     // Arrange
-  //     carolBeforeWithdrawBalance = toBN(await web3.eth.getBalance(carol));
-  //     await contract.methods.split().send({from: owner, value: toWei('0.06', 'ether')});
+  context('When the balance is zero', () => {
+    it('should fail to withdraw for Bob', async () => {
+      // Act & Assert
+      await truffleAssert.reverts(
+        contract.methods.withdraw().send({from: bob}),
+        'Balance must be grater than zero to withdraw!'
+      );
+    });
+  });
 
-  //     // Act
-  //     tx = await contract.methods.withdraw().send({from: carol});
-  //   });
+  context('When someone else withdraws', () => {
+    beforeEach(async () => {
+      // Arrange
+      await contract.methods.split(bob, carol).send({from: owner, value: toWei('0.06', 'ether')});
+    });
 
-  //   it('should withdraw the ether to Carol\'s account', async () => {
-  //     // Assert
-  //     const gasPrice = toBN(await web3.eth.getGasPrice());
-  //     const gasFee = toBN(tx.gasUsed).mul(gasPrice);
-  //     assert.strictEqual(toBN((await web3.eth.getBalance(carol))).sub(carolBeforeWithdrawBalance).toString(10), toBN(toWei('0.03', 'ether')).sub(gasFee).toString(10));
-  //   });
-
-  //   it('Carol\'s balance in the contract should set to zero', async () => {
-  //     // Assert
-  //     assert.strictEqual((await contract.methods.carolBalance().call()), '0');
-  //   });
-
-  //   it('the contract balance should decrease 0.03 ether', async () => {
-  //     // Assert
-  //     assert.strictEqual((await web3.eth.getBalance(contract.options.address)), toWei('0.03', 'ether'));
-  //   });
-
-  //   it('should emit the LogCarolWithdrawn event', async () => {
-  //     // Assert
-  //     assert.strictEqual(tx.events.LogCarolWithdrawn.event, 'LogCarolWithdrawn');
-  //     assert.strictEqual(tx.events.LogCarolWithdrawn.returnValues.amount, toWei('0.03', 'ether'));
-  //   });
-  // });
-
-  // context('When the balance is zero', () => {
-  //   it('should fail to withdraw for Bob', async () => {
-  //     // Act & Assert
-  //     await truffleAssert.reverts(
-  //       contract.methods.withdraw().send({from: bob}),
-  //       'Bob\'s balance must be grater than zero!'
-  //     );
-  //   });
-
-  //   it('should fail to withdraw for Carol', async () => {
-  //     // Act & Assert
-  //     await truffleAssert.reverts(
-  //       contract.methods.withdraw().send({from: carol}),
-  //       'Carol\'s balance must be grater than zero!'
-  //     );
-  //   });
-  // });
-
-  // context('When someone else withdraws', () => {
-  //   beforeEach(async () => {
-  //     // Arrange
-  //     await contract.methods.split().send({from: owner, value: toWei('0.06', 'ether')});
-  //   });
-
-  //   it('should fail to withdraw', async () => {
-  //     // Act & Assert
-  //     await truffleAssert.reverts(
-  //       contract.methods.withdraw().send({from: someoneElse}),
-  //       'Only Bob or Carol can withdraw!'
-  //     );
-  //   });
-  // });
+    it('should fail to withdraw', async () => {
+      // Act & Assert
+      await truffleAssert.reverts(
+        contract.methods.withdraw().send({from: someoneElse}),
+        'Balance must be grater than zero to withdraw!'
+      );
+    });
+  });
 });

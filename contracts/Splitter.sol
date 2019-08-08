@@ -31,20 +31,11 @@ contract Splitter {
     emit LogSplitted(msg.sender, msg.value, _beneficiary1, _beneficiary2);
   }
 
-  // function withdraw() external {
-  //   require(msg.sender == bob || msg.sender == carol, "Only Bob or Carol can withdraw!");
-  //   if (msg.sender == bob) {
-  //     uint256 tempBobBalance = bobBalance;
-  //     require(tempBobBalance > 0, "Bob's balance must be grater than zero!");
-  //     bobBalance = 0;
-  //     msg.sender.transfer(tempBobBalance);
-  //     emit LogBobWithdrawn(tempBobBalance);
-  //   } else if (msg.sender == carol) {
-  //     uint256 tempCarolBalance = carolBalance;
-  //     require(tempCarolBalance > 0, "Carol's balance must be grater than zero!");
-  //     carolBalance = 0;
-  //     msg.sender.transfer(tempCarolBalance);
-  //     emit LogCarolWithdrawn(tempCarolBalance);
-  //   }
-  // }
+  function withdraw() external {
+    uint256 balanceToWithdraw = beneficiaries[msg.sender];
+    require(balanceToWithdraw > 0, "Balance must be grater than zero to withdraw!");
+    beneficiaries[msg.sender] = 0;
+    emit LogWithdrawn(msg.sender, balanceToWithdraw);
+    msg.sender.transfer(balanceToWithdraw);
+  }
 }
