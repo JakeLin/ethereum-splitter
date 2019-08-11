@@ -1,24 +1,15 @@
 pragma solidity >=0.4.21 <0.6.0;
 
 import "./SafeMath.sol";
+import "./Ownable.sol";
 
-contract Splitter {
+contract Splitter is Ownable {
   using SafeMath for uint256;
 
   event LogSplitted(address indexed sender, uint256 amount, address indexed beneficiary1, address indexed beneficiary2);
   event LogWithdrawn(address indexed sender, uint256 amount);
 
-  address public owner;
   mapping (address => uint256) public balances;
-
-  constructor() public {
-    owner = msg.sender;
-  }
-
-  modifier onlyOwner() {
-    require (msg.sender == owner, "Only owner can split!");
-    _;
-  }
 
   function split(address _beneficiary1, address _beneficiary2) external payable onlyOwner() {
     require(_beneficiary1 != address(0) && _beneficiary2 != address(0), "Beneficiary's address must not be zero!");
