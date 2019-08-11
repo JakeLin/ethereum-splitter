@@ -95,7 +95,7 @@ contract('Splitter', accounts => {
 
     it('should withdraw the ether to Bob\'s account', async () => {
       // Assert
-      const gasPrice = toBN(await web3.eth.getGasPrice());
+      const gasPrice = toBN((await web3.eth.getTransaction(tx.transactionHash)).gasPrice);
       const gasFee = toBN(tx.gasUsed).mul(gasPrice);
       assert.strictEqual(toBN((await web3.eth.getBalance(bob))).sub(bobBeforeWithdrawBalance).toString(10), toBN(toWei('0.03', 'ether')).sub(gasFee).toString(10));
     });
