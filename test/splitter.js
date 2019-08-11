@@ -76,7 +76,7 @@ contract('Splitter', accounts => {
       // Act & Assert
       await truffleAssert.reverts(
         contract.methods.split(bob, carol).send({from: someoneElse, value: 2}),
-        'Only owner can split!'
+        'Ownable: caller is not the owner'
       );
     });
   });
