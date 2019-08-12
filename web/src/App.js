@@ -1,4 +1,11 @@
 import React, { Component } from 'react';
+
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableRow from '@material-ui/core/TableRow';
+import Card from '@material-ui/core/Card';
+
 import Web3 from 'web3';
 
 import './App.css';
@@ -51,16 +58,29 @@ class App extends Component {
     if (contractLoaded) {
       const url = `//ropsten.etherscan.io/address/${contractAddress}`
       return (
-        <div>
-          <div>Network: <b>{network}</b></div>
-          <div>Contract address: <a href={url} target="_blank">{contractAddress}</a></div>
-          <div>Contract balance: <b>{contractBalance} ether</b></div>
-        </div>
+        <Card className="card">
+          <Table className="contact-info-table">
+            <TableBody>
+              <TableRow key="network">
+                <TableCell align="right">Network</TableCell>
+                <TableCell align="left">{network}</TableCell>
+              </TableRow>
+              <TableRow key="network">
+                <TableCell align="right">Contract address</TableCell>
+                <TableCell align="left"><a href={url} target="_blank">{contractAddress}</a></TableCell>
+              </TableRow>
+              <TableRow key="network">
+                <TableCell align="right">Contract balance</TableCell>
+                <TableCell align="left">{contractBalance} ether</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </Card>
       );
     }
 
     return (
-      <span> Loading contract info... </span>
+      <span className="loading-message"> Loading contract info... </span>
     );
   };
 
@@ -87,10 +107,8 @@ class App extends Component {
 
   render() {
     return (
-      <div>
-        <div>
+      <div className="cards">
           { this.renderContractInfo() }
-        </div>
         <div>
           { this.renderCheckAccountBalances() }
         </div>
