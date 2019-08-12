@@ -5,6 +5,8 @@ import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableRow from '@material-ui/core/TableRow';
 import Card from '@material-ui/core/Card';
+import TextField from '@material-ui/core/TextField';
+import Button from '@material-ui/core/Button';
 
 import Web3 from 'web3';
 
@@ -21,8 +23,14 @@ class App extends Component {
     balances: [],
     hasError: false,
     message: '',
-    contractLoaded: false
+    contractLoaded: false,
+    accountAddress: ''
   };
+
+  constructor(props) {
+    super(props);
+    this.handleChange = this.handleChange.bind(this);
+  }
 
   async componentDidMount() {
     try {
@@ -53,23 +61,27 @@ class App extends Component {
     }
   }
 
+  handleChange = (event) => {
+    this.setState({ [event.target.name]: event.target.value });
+  };
+
   renderContractInfo = () => {
-    const {contractLoaded, network, contractBalance} = this.state;
+    const { contractLoaded, network, contractBalance } = this.state;
     if (contractLoaded) {
       const url = `//ropsten.etherscan.io/address/${contractAddress}`
       return (
         <Card className="card">
-          <Table className="contact-info-table">
+          <Table>
             <TableBody>
               <TableRow key="network">
                 <TableCell align="right">Network</TableCell>
                 <TableCell align="left">{network}</TableCell>
               </TableRow>
-              <TableRow key="network">
+              <TableRow key="contract-address">
                 <TableCell align="right">Contract address</TableCell>
-                <TableCell align="left"><a href={url} target="_blank">{contractAddress}</a></TableCell>
+                <TableCell align="left"><a href={url} target="_blank" rel="noopener noreferrer">{contractAddress}</a></TableCell>
               </TableRow>
-              <TableRow key="network">
+              <TableRow key="contract-balance">
                 <TableCell align="right">Contract balance</TableCell>
                 <TableCell align="left">{contractBalance} ether</TableCell>
               </TableRow>
@@ -84,22 +96,57 @@ class App extends Component {
     );
   };
 
+  checkAccountBalance = async () => {
+    const { web3, contract, accountAddress } = this.state;
+    if (!web3.utils.isAddress(accountAddress)) {
+      this.setState({ accountBalanceMessage: 'Invalid address!' });
+      return;
+    }
+    const balance = await contract.methods.balances(accountAddress).call();
+    const accountBalanceMessage = `${accountAddress} balance is ${balance} ether.`
+    this.setState({ accountBalanceMessage });
+  };
+
   renderCheckAccountBalances = () => {
-    const {contractLoaded} = this.state;
+    const { contractLoaded, accountAddress, accountBalanceMessage } = this.state;
     if (!contractLoaded) {
       return null;
     }
+
+    return (
+      <Card className="card">
+        <TextField
+          id="account-address"
+          name="accountAddress"
+          label="Account address"
+          className="account-address"
+          value={accountAddress}
+          onChange={this.handleChange}
+          margin="normal"
+          variant="outlined"
+        />
+        <Button 
+          variant="contained" 
+          color="primary"
+          onClick={this.checkAccountBalance}>
+          Check account balance
+        </Button>
+        <div className="account-balance-message">
+          { accountBalanceMessage }
+        </div>
+      </Card>
+    );
   };
 
   renderSplit = () => {
-    const {contractLoaded} = this.state;
+    const { contractLoaded } = this.state;
     if (!contractLoaded) {
       return null;
     }
   };
 
   renderWithdraw = () => {
-    const {contractLoaded} = this.state;
+    const { contractLoaded } = this.state;
     if (!contractLoaded) {
       return null;
     }
@@ -108,16 +155,10 @@ class App extends Component {
   render() {
     return (
       <div className="cards">
-          { this.renderContractInfo() }
-        <div>
-          { this.renderCheckAccountBalances() }
-        </div>
-        <div>
-          { this.renderSplit() }
-        </div>
-        <div>
-          { this.renderWithdraw() }
-        </div>
+        { this.renderContractInfo() }
+        { this.renderCheckAccountBalances() }
+        { this.renderSplit() }
+        { this.renderWithdraw() }
       </div>
     );
   }

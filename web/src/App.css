@@ -1,12 +1,25 @@
 .cards {
   display: flex;
   justify-content: center;
+  align-items: center;
+  flex-direction: column;
 }
 
 .card {
   margin-top: 20px;
+  width: 600px;
+  max-width: 800px;
+  padding: 20px;
 }
 
 .loading-message {
   margin-top: 20px;
+}
+
+.account-address {
+  width: 100%;
+}
+
+.account-balance-message {
+  margin-top: 10px;
 }
