@@ -24,10 +24,10 @@ class App extends Component {
     hasError: false,
     message: '',
     contractLoaded: false,
-    accountAddress: '0x017cc1D0f96B6ef9EB323D3e125B6761075B5603',
+    accountAddress: '',
     etherToSplit: '1',
-    beneficiary1Address: '0x017cc1D0f96B6ef9EB323D3e125B6761075B5603',
-    beneficiary2Address: '0xD710ACC647Fe4160F126Afd74598E0f8423a0dE5',
+    beneficiary1Address: '',
+    beneficiary2Address: '',
   };
 
   constructor(props) {
@@ -157,7 +157,8 @@ class App extends Component {
         from: accounts[0],
         value: web3.utils.toWei(etherToSplit, 'ether')
       });
-      this.setState({ splitMessage: `Splitted successfully.` });
+      const contractBalance = web3.utils.fromWei(await web3.eth.getBalance(contractAddress));
+      this.setState({ splitMessage: `Splitted successfully.`, contractBalance });
     } catch(e) {
       this.setState({ splitMessage: e.message });
     }
@@ -223,7 +224,8 @@ class App extends Component {
       await contract.methods.withdraw().send({
         from: accounts[0]
       });
-      this.setState({ withdrawMessage: `Withdrawn successfully.` });
+      const contractBalance = web3.utils.fromWei(await web3.eth.getBalance(contractAddress));
+      this.setState({ withdrawMessage: `Withdrawn successfully.`, contractBalance });
     } catch(e) {
       this.setState({ withdrawMessage: e.message });
     }
