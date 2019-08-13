@@ -160,4 +160,102 @@ contract('Splitter', accounts => {
       );
     });
   });
+
+  context('When owner pause the contract', () => {
+    context('if the contract is unpaused', () => {
+      beforeEach(async () => {
+        // Arrange & Act
+        await contract.methods.pause().send({from: owner});
+      });
+  
+      it('the contract should be paused', async () => {
+        assert.strictEqual((await contract.methods.paused().call()), true);
+      });
+    });
+    
+    context('if the contract is paused', () => {
+      beforeEach(async () => {
+        // Arrange & Act
+        await contract.methods.pause().send({from: owner});
+      });
+  
+      it('should fail', async () => {
+        // Assert
+        await truffleAssert.reverts(
+          contract.methods.pause().send({from: owner}),
+          'revert Can\'t pause a paused contract!'
+        );
+      });
+    });
+  });
+
+  context('When owner unPause the contract', () => {
+    context('if the contract is paused', () => {
+      beforeEach(async () => {
+        // Arrange
+        await contract.methods.pause().send({from: owner});
+
+        // Act
+        await contract.methods.unPause().send({from: owner});
+      });
+  
+      it('the contract should be unPaused', async () => {
+        // Assert
+        assert.strictEqual((await contract.methods.paused().call()), false);
+      });
+    });
+    
+    context('if the contract is unPaused', () => {
+      it('should fail', async () => {
+        // Act & Assert
+        await truffleAssert.reverts(
+          contract.methods.unPause().send({from: owner}),
+          'revert Can\'t unPause a non-paused contract!'
+        );
+      });
+    });
+  });
+
+  context('When not owner pause the contract', () => {
+    it('should fail', async () => {
+      // Act & Assert
+      await truffleAssert.reverts(
+        contract.methods.pause().send({from: someoneElse}),
+        'Only owner can do this!'
+      );
+    });
+  });
+
+  context('When not owner unPause the contract', () => {
+    it('should fail', async () => {
+      // Act & Assert
+      await truffleAssert.reverts(
+        contract.methods.unPause().send({from: someoneElse}),
+        'Only owner can do this!'
+      );
+    });
+  });
+
+  context('When the contract is paused', () => {
+    beforeEach(async () => {
+      // Arrange
+      await contract.methods.pause().send({from: owner});
+    });
+
+    it('should fail to split', async () => {
+      // Act & Assert
+      await truffleAssert.reverts(
+        contract.methods.split(bob, carol).send({from: owner, value: toWei('0.02', 'ether')}),
+        'Can\'t do that when the contract is paused!'
+      );
+    });
+
+    it('should fail to withdraw', async () => {
+      // Act & Assert
+      await truffleAssert.reverts(
+        contract.methods.withdraw().send({from: bob}),
+        'Can\'t do that when the contract is paused!'
+      );
+    });
+  });
 });
