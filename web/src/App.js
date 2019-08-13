@@ -215,11 +215,39 @@ class App extends Component {
     );
   };
 
+  withdraw = async () => {
+    const { web3, contract, accounts } = this.state;
+
+    try {
+      this.setState({ withdrawMessage: 'Submitting the transaction.' });
+      await contract.methods.withdraw().send({
+        from: accounts[0]
+      });
+      this.setState({ withdrawMessage: `Withdrawn successfully.` });
+    } catch(e) {
+      this.setState({ withdrawMessage: e.message });
+    }
+  };
+
   renderWithdraw = () => {
-    const { contractLoaded } = this.state;
+    const { contractLoaded, withdrawMessage } = this.state;
     if (!contractLoaded) {
       return null;
     }
+
+    return (
+      <Card className="card">
+        <Button 
+          variant="contained" 
+          color="primary"
+          onClick={this.withdraw}>
+          Withdraw
+        </Button>
+        <div className="message">
+          { withdrawMessage }
+        </div>
+      </Card>
+    );
   };
 
   render() {
