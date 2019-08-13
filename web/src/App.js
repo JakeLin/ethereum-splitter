@@ -24,7 +24,10 @@ class App extends Component {
     hasError: false,
     message: '',
     contractLoaded: false,
-    accountAddress: ''
+    accountAddress: '0x017cc1D0f96B6ef9EB323D3e125B6761075B5603',
+    etherToSplit: '1',
+    beneficiary1Address: '0x017cc1D0f96B6ef9EB323D3e125B6761075B5603',
+    beneficiary2Address: '0xD710ACC647Fe4160F126Afd74598E0f8423a0dE5',
   };
 
   constructor(props) {
@@ -99,7 +102,7 @@ class App extends Component {
   checkAccountBalance = async () => {
     const { web3, contract, accountAddress } = this.state;
     if (!web3.utils.isAddress(accountAddress)) {
-      this.setState({ accountBalanceMessage: 'Invalid address!' });
+      this.setState({ accountBalanceMessage: 'Accournt address is invalid!' });
       return;
     }
     const balance = await contract.methods.balances(accountAddress).call();
@@ -116,10 +119,10 @@ class App extends Component {
     return (
       <Card className="card">
         <TextField
-          id="account-address"
+          id="text-field"
           name="accountAddress"
           label="Account address"
-          className="account-address"
+          className="text-field"
           value={accountAddress}
           onChange={this.handleChange}
           margin="normal"
@@ -131,18 +134,86 @@ class App extends Component {
           onClick={this.checkAccountBalance}>
           Check account balance
         </Button>
-        <div className="account-balance-message">
+        <div className="message">
           { accountBalanceMessage }
         </div>
       </Card>
     );
   };
 
+  split = async () => {
+    const { web3, contract, accounts, etherToSplit, beneficiary1Address, beneficiary2Address } = this.state;
+    if (!web3.utils.isAddress(beneficiary1Address)) {
+      this.setState({ splitMessage: 'Beneficiary 1 address is invalid!' });
+      return;
+    } else if (!web3.utils.isAddress(beneficiary2Address)) {
+      this.setState({ splitMessage: 'Beneficiary 2 address is invalid!' });
+      return;
+    }
+
+    try {
+      this.setState({ splitMessage: 'Submitting the transaction.' });
+      await contract.methods.split(beneficiary1Address, beneficiary2Address).send({
+        from: accounts[0],
+        value: web3.utils.toWei(etherToSplit, 'ether')
+      });
+      const splitMessage = `Splitted successfully.`
+      this.setState({ splitMessage });
+    } catch(e) {
+      this.setState({ splitMessage: e.message });
+    }
+  };
+
   renderSplit = () => {
-    const { contractLoaded } = this.state;
+    const { contractLoaded, etherToSplit, beneficiary1Address, beneficiary2Address, splitMessage } = this.state;
     if (!contractLoaded) {
       return null;
     }
+
+    return (
+      <Card className="card">
+        <TextField
+          id="ether-to-split"
+          name="etherToSplit"
+          label="Ether to split"
+          className="text-field"
+          type="number"
+          value={etherToSplit}
+          onChange={this.handleChange}
+          margin="normal"
+          variant="outlined"
+        />
+        <TextField
+          id="beneficiary1-address"
+          name="beneficiary1Address"
+          label="Beneficiary 1 Address"
+          className="text-field"
+          value={beneficiary1Address}
+          onChange={this.handleChange}
+          margin="normal"
+          variant="outlined"
+        />
+        <TextField
+          id="beneficiary2-address"
+          name="beneficiary2Address"
+          label="Beneficiary 2 Address"
+          className="text-field"
+          value={beneficiary2Address}
+          onChange={this.handleChange}
+          margin="normal"
+          variant="outlined"
+        />
+        <Button 
+          variant="contained" 
+          color="primary"
+          onClick={this.split}>
+          Split
+        </Button>
+        <div className="message">
+          { splitMessage }
+        </div>
+      </Card>
+    );
   };
 
   renderWithdraw = () => {
