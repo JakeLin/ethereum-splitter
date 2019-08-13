@@ -105,7 +105,7 @@ class App extends Component {
       this.setState({ accountBalanceMessage: 'Accournt address is invalid!' });
       return;
     }
-    const balance = await contract.methods.balances(accountAddress).call();
+    const balance = web3.utils.fromWei(await contract.methods.balances(accountAddress).call(), 'ether');
     const accountBalanceMessage = `${accountAddress} balance is ${balance} ether.`
     this.setState({ accountBalanceMessage });
   };
@@ -157,8 +157,7 @@ class App extends Component {
         from: accounts[0],
         value: web3.utils.toWei(etherToSplit, 'ether')
       });
-      const splitMessage = `Splitted successfully.`
-      this.setState({ splitMessage });
+      this.setState({ splitMessage: `Splitted successfully.` });
     } catch(e) {
       this.setState({ splitMessage: e.message });
     }
