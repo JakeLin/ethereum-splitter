@@ -72,12 +72,30 @@ contract('Splitter', accounts => {
   });
 
   context('When not owner splits', () => {
-    it('should fail', async () => {
-      // Act & Assert
-      await truffleAssert.reverts(
-        contract.methods.split(bob, carol).send({from: someoneElse, value: 2}),
-        'Ownable: caller is not the owner'
-      );
+    let tx;
+    beforeEach(async () => {
+      // Arrange & Act
+      tx = await contract.methods.split(bob, carol).send({from: someoneElse, value: toWei('0.02', 'ether')});
+    });
+
+    it('should split the ether to Bob and Carol\'s balance evenly', async () => {
+      // Assert
+      assert.strictEqual((await contract.methods.balances(bob).call()), toWei('0.01', 'ether'));
+      assert.strictEqual((await contract.methods.balances(carol).call()), toWei('0.01', 'ether'));
+    });
+
+    it('the contract balance should increase 0.02 ether', async () => {
+      // Assert
+      assert.strictEqual((await web3.eth.getBalance(contract.options.address)), toWei('0.02', 'ether'));
+    });
+
+    it('should emit the LogSplitted event', async () => {
+      // Assert
+      assert.strictEqual(tx.events.LogSplitted.event, 'LogSplitted');
+      assert.strictEqual(tx.events.LogSplitted.returnValues.sender, someoneElse);
+      assert.strictEqual(tx.events.LogSplitted.returnValues.amount, toWei('0.02', 'ether'));
+      assert.strictEqual(tx.events.LogSplitted.returnValues.beneficiary1, bob);
+      assert.strictEqual(tx.events.LogSplitted.returnValues.beneficiary2, carol);
     });
   });
 
