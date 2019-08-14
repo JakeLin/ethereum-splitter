@@ -14,9 +14,6 @@ import './App.css';
 
 const { abi, networks } = require('./contracts/Splitter.json');
 
-// Support ropsten testnet
-const contractAddress = networks['3'].address;
-
 class App extends Component {
   state = {
     owner: '',
@@ -33,6 +30,7 @@ class App extends Component {
     contractBalance: null,
     network: null,
     web3: null,
+    contractAddress: null,
   };
 
   constructor(props) {
@@ -54,11 +52,13 @@ class App extends Component {
           return;
         }
 
+        const networkId = await web3.eth.net.getId();
+        const contractAddress = networks[networkId].address;
         const contract = new web3.eth.Contract(abi, contractAddress)
         const network = await web3.eth.net.getNetworkType();
         const owner = await contract.methods.owner().call();
         const contractBalance = web3.utils.fromWei(await web3.eth.getBalance(contractAddress));
-        this.setState({ web3, contract, owner, contractBalance, accounts, network, contractLoaded: true });
+        this.setState({ web3, contract, owner, contractBalance, accounts, network, contractAddress, contractLoaded: true });
       } else {
         console.log('No Web3 Detected!');
         this.setState({ hasError: true, message: 'Please install MetaMask to use this app!' });
@@ -74,7 +74,7 @@ class App extends Component {
   };
 
   renderContractInfo = () => {
-    const { contractLoaded, network, contractBalance } = this.state;
+    const { contractLoaded, network, contractBalance, contractAddress } = this.state;
     if (contractLoaded) {
       const url = `//ropsten.etherscan.io/address/${contractAddress}`
       return (
@@ -147,7 +147,7 @@ class App extends Component {
   };
 
   split = async () => {
-    const { web3, contract, accounts, etherToSplit, beneficiary1Address, beneficiary2Address } = this.state;
+    const { web3, contract, accounts, etherToSplit, beneficiary1Address, beneficiary2Address, contractAddress } = this.state;
     if (!web3.utils.isAddress(beneficiary1Address)) {
       this.setState({ splitMessage: 'Beneficiary 1 address is invalid!' });
       return;
@@ -222,7 +222,7 @@ class App extends Component {
   };
 
   withdraw = async () => {
-    const { web3, contract, accounts } = this.state;
+    const { web3, contract, accounts, contractAddress } = this.state;
 
     try {
       this.setState({ withdrawMessage: 'Submitting the transaction.' });
