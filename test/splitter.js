@@ -72,12 +72,30 @@ contract('Splitter', accounts => {
   });
 
   context('When not owner splits', () => {
-    it('should fail', async () => {
-      // Act & Assert
-      await truffleAssert.reverts(
-        contract.methods.split(bob, carol).send({from: someoneElse, value: 2}),
-        'Ownable: caller is not the owner'
-      );
+    let tx;
+    beforeEach(async () => {
+      // Arrange & Act
+      tx = await contract.methods.split(bob, carol).send({from: someoneElse, value: toWei('0.02', 'ether')});
+    });
+
+    it('should split the ether to Bob and Carol\'s balance evenly', async () => {
+      // Assert
+      assert.strictEqual((await contract.methods.balances(bob).call()), toWei('0.01', 'ether'));
+      assert.strictEqual((await contract.methods.balances(carol).call()), toWei('0.01', 'ether'));
+    });
+
+    it('the contract balance should increase 0.02 ether', async () => {
+      // Assert
+      assert.strictEqual((await web3.eth.getBalance(contract.options.address)), toWei('0.02', 'ether'));
+    });
+
+    it('should emit the LogSplitted event', async () => {
+      // Assert
+      assert.strictEqual(tx.events.LogSplitted.event, 'LogSplitted');
+      assert.strictEqual(tx.events.LogSplitted.returnValues.sender, someoneElse);
+      assert.strictEqual(tx.events.LogSplitted.returnValues.amount, toWei('0.02', 'ether'));
+      assert.strictEqual(tx.events.LogSplitted.returnValues.beneficiary1, bob);
+      assert.strictEqual(tx.events.LogSplitted.returnValues.beneficiary2, carol);
     });
   });
 
@@ -139,6 +157,104 @@ contract('Splitter', accounts => {
       await truffleAssert.reverts(
         contract.methods.withdraw().send({from: someoneElse}),
         'Balance must be grater than zero to withdraw!'
+      );
+    });
+  });
+
+  context('When owner pause the contract', () => {
+    context('if the contract is unpaused', () => {
+      beforeEach(async () => {
+        // Arrange & Act
+        await contract.methods.pause().send({from: owner});
+      });
+  
+      it('the contract should be paused', async () => {
+        assert.strictEqual((await contract.methods.paused().call()), true);
+      });
+    });
+    
+    context('if the contract is paused', () => {
+      beforeEach(async () => {
+        // Arrange & Act
+        await contract.methods.pause().send({from: owner});
+      });
+  
+      it('should fail', async () => {
+        // Assert
+        await truffleAssert.reverts(
+          contract.methods.pause().send({from: owner}),
+          'revert Can\'t pause a paused contract!'
+        );
+      });
+    });
+  });
+
+  context('When owner unPause the contract', () => {
+    context('if the contract is paused', () => {
+      beforeEach(async () => {
+        // Arrange
+        await contract.methods.pause().send({from: owner});
+
+        // Act
+        await contract.methods.unPause().send({from: owner});
+      });
+  
+      it('the contract should be unPaused', async () => {
+        // Assert
+        assert.strictEqual((await contract.methods.paused().call()), false);
+      });
+    });
+    
+    context('if the contract is unPaused', () => {
+      it('should fail', async () => {
+        // Act & Assert
+        await truffleAssert.reverts(
+          contract.methods.unPause().send({from: owner}),
+          'revert Can\'t unPause a non-paused contract!'
+        );
+      });
+    });
+  });
+
+  context('When not owner pause the contract', () => {
+    it('should fail', async () => {
+      // Act & Assert
+      await truffleAssert.reverts(
+        contract.methods.pause().send({from: someoneElse}),
+        'Only owner can do this!'
+      );
+    });
+  });
+
+  context('When not owner unPause the contract', () => {
+    it('should fail', async () => {
+      // Act & Assert
+      await truffleAssert.reverts(
+        contract.methods.unPause().send({from: someoneElse}),
+        'Only owner can do this!'
+      );
+    });
+  });
+
+  context('When the contract is paused', () => {
+    beforeEach(async () => {
+      // Arrange
+      await contract.methods.pause().send({from: owner});
+    });
+
+    it('should fail to split', async () => {
+      // Act & Assert
+      await truffleAssert.reverts(
+        contract.methods.split(bob, carol).send({from: owner, value: toWei('0.02', 'ether')}),
+        'Can\'t do that when the contract is paused!'
+      );
+    });
+
+    it('should fail to withdraw', async () => {
+      // Act & Assert
+      await truffleAssert.reverts(
+        contract.methods.withdraw().send({from: bob}),
+        'Can\'t do that when the contract is paused!'
       );
     });
   });

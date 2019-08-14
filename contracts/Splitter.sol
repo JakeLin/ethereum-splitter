@@ -1,17 +1,22 @@
 pragma solidity >=0.4.21 <0.6.0;
 
 import "./SafeMath.sol";
-import "./Ownable.sol";
+import "./Pausable.sol";
 
-contract Splitter is Ownable {
+contract Splitter is Pausable {
   using SafeMath for uint256;
 
   event LogSplitted(address indexed sender, uint256 amount, address indexed beneficiary1, address indexed beneficiary2);
   event LogWithdrawn(address indexed sender, uint256 amount);
 
   mapping (address => uint256) public balances;
+  address public owner;
 
-  function split(address _beneficiary1, address _beneficiary2) external payable onlyOwner() {
+  constructor() public {
+    owner = msg.sender;
+  }
+
+  function split(address _beneficiary1, address _beneficiary2) external payable whenNotPaused {
     require(_beneficiary1 != address(0) && _beneficiary2 != address(0), "Beneficiary's address must not be zero!");
     require(msg.value > 0, "Must split more than zero ether!");
     require(msg.value.mod(2) == 0, "The ether to be splitted must be even!");
@@ -22,7 +27,7 @@ contract Splitter is Ownable {
     emit LogSplitted(msg.sender, msg.value, _beneficiary1, _beneficiary2);
   }
 
-  function withdraw() external {
+  function withdraw() external whenNotPaused {
     uint256 balanceToWithdraw = balances[msg.sender];
     require(balanceToWithdraw > 0, "Balance must be grater than zero to withdraw!");
     balances[msg.sender] = 0;

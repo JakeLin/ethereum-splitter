@@ -17,3 +17,12 @@ We use JavaScript to test our contract.
 ```
 > truffle test
 ```
+
+### WEB DAPP
+The Dapp is developed by React.js, we can start it locally
+
+```
+> cd web
+> yarn
+> yarn start
+```
