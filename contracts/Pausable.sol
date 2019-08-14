@@ -1,21 +1,17 @@
 pragma solidity >=0.4.21 <0.6.0;
 
-contract Pausable {
-  address public owner;
-  bool public paused;
+import "./Ownable.sol";
 
-  constructor() public {
-    owner = msg.sender;
-  }
-
-  modifier onlyOwner() {
-    require(msg.sender == owner, "Only owner can do this!");
-    _;
-  }
+contract Pausable is Ownable {
+  bool private paused = false;
 
   modifier whenNotPaused() {
     require(!paused, "Can't do that when the contract is paused!");
     _;
+  }
+
+  function isPaused() public view returns (bool) {
+    return paused;
   }
 
   function pause() public onlyOwner {

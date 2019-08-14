@@ -169,7 +169,7 @@ contract('Splitter', accounts => {
       });
   
       it('the contract should be paused', async () => {
-        assert.strictEqual((await contract.methods.paused().call()), true);
+        assert.strictEqual((await contract.methods.isPaused().call()), true);
       });
     });
     
@@ -201,7 +201,7 @@ contract('Splitter', accounts => {
   
       it('the contract should be unPaused', async () => {
         // Assert
-        assert.strictEqual((await contract.methods.paused().call()), false);
+        assert.strictEqual((await contract.methods.isPaused().call()), false);
       });
     });
     
