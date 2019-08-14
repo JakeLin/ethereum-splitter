@@ -40,29 +40,30 @@ class App extends Component {
 
   async componentDidMount() {
     try {
+      let web3;
       // Checking if Web3 has been injected by the browser (Mist/MetaMask)
       if (typeof window.web3 !== 'undefined') {
         // Use Mist/MetaMask's provider.
-        const web3 = new Web3(window.web3.currentProvider);
+        web3 = new Web3(window.web3.currentProvider);
         console.log('Web3 Detected! ' + web3.currentProvider.constructor.name);
-
-        const accounts = await web3.eth.getAccounts();
-        if (accounts.length === 0) {
-          this.setState({ hasError: true, message: 'Please sign in MetaMask and refresh the page!' });
-          return;
-        }
-
-        const networkId = await web3.eth.net.getId();
-        const contractAddress = networks[networkId].address;
-        const contract = new web3.eth.Contract(abi, contractAddress)
-        const network = await web3.eth.net.getNetworkType();
-        const owner = await contract.methods.owner().call();
-        const contractBalance = web3.utils.fromWei(await web3.eth.getBalance(contractAddress));
-        this.setState({ web3, contract, owner, contractBalance, accounts, network, contractAddress, contractLoaded: true });
       } else {
-        console.log('No Web3 Detected!');
-        this.setState({ hasError: true, message: 'Please install MetaMask to use this app!' });
+        console.log('No Web3 Detected, use local node 127.0.0.1:8545');
+        web3 = new Web3(new Web3.providers.HttpProvider('http://127.0.0.1:8545'));
       }
+
+      const accounts = await web3.eth.getAccounts();
+      if (accounts.length === 0) {
+        this.setState({ hasError: true, message: 'Please sign in MetaMask and refresh the page!' });
+        return;
+      }
+
+      const networkId = await web3.eth.net.getId();
+      const contractAddress = networks[networkId].address;
+      const contract = new web3.eth.Contract(abi, contractAddress)
+      const network = await web3.eth.net.getNetworkType();
+      const owner = await contract.methods.owner().call();
+      const contractBalance = web3.utils.fromWei(await web3.eth.getBalance(contractAddress));
+      this.setState({ web3, contract, owner, contractBalance, accounts, network, contractAddress, contractLoaded: true });
     } catch(e) {
       console.error(e);
       this.setState({ hasError: true, message: 'Something went wrong!' });
