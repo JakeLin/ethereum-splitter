@@ -158,12 +158,18 @@ class App extends Component {
 
     try {
       this.setState({ splitMessage: 'Submitting the transaction.' });
-      await contract.methods.split(beneficiary1Address, beneficiary2Address).send({
+      const tx = await contract.methods.split(beneficiary1Address, beneficiary2Address).send({
         from: accounts[0],
         value: web3.utils.toWei(etherToSplit, 'ether')
+      }).on("transactionHash", txHash => {
+        this.setState({ splitMessage: `Transaction ${txHash} submitted, waiting for the network to mine` });
       });
-      const contractBalance = web3.utils.fromWei(await web3.eth.getBalance(contractAddress));
-      this.setState({ splitMessage: `Splitted successfully.`, contractBalance });
+      if (tx.status) {
+        const contractBalance = web3.utils.fromWei(await web3.eth.getBalance(contractAddress));
+        this.setState({ splitMessage: `Transaction ${tx.transactionHash} got mined successfully.`, contractBalance });
+      } else {
+        this.setState({ splitMessage: `Something went wrong.` });
+      }
     } catch(e) {
       this.setState({ splitMessage: e.message });
     }
@@ -226,11 +232,17 @@ class App extends Component {
 
     try {
       this.setState({ withdrawMessage: 'Submitting the transaction.' });
-      await contract.methods.withdraw().send({
+      const tx = await contract.methods.withdraw().send({
         from: accounts[0]
+      }).on("transactionHash", txHash => {
+        this.setState({ withdrawMessage: `Transaction ${txHash} submitted, waiting for the network to mine` });
       });
-      const contractBalance = web3.utils.fromWei(await web3.eth.getBalance(contractAddress));
-      this.setState({ withdrawMessage: `Withdrawn successfully.`, contractBalance });
+      if (tx.status) {
+        const contractBalance = web3.utils.fromWei(await web3.eth.getBalance(contractAddress));
+        this.setState({ withdrawMessage: `Transaction ${tx.transactionHash} got mined successfully.`, contractBalance });
+      } else {
+        this.setState({ withdrawMessage: `Something went wrong.` });
+      };
     } catch(e) {
       this.setState({ withdrawMessage: e.message });
     }
