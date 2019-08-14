@@ -28,6 +28,11 @@ class App extends Component {
     etherToSplit: '1',
     beneficiary1Address: '',
     beneficiary2Address: '',
+    contract: null,
+    accounts: [],
+    contractBalance: null,
+    network: null,
+    web3: null,
   };
 
   constructor(props) {
@@ -252,6 +257,17 @@ class App extends Component {
     );
   };
 
+  renderError = () => {
+    const { contractLoaded, hasError, message } = this.state;
+    if (contractLoaded && !hasError) {
+      return null;
+    }
+
+    return (
+      <span className="error-message">{ message }</span>
+    );
+  };
+
   render() {
     return (
       <div className="cards">
@@ -259,6 +275,7 @@ class App extends Component {
         { this.renderCheckAccountBalances() }
         { this.renderSplit() }
         { this.renderWithdraw() }
+        { this.renderError() }
       </div>
     );
   }

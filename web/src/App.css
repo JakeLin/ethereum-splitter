@@ -23,3 +23,8 @@
 .message {
   margin-top: 10px;
 }
+
+.error-message {
+  margin-top: 20px;
+  color: red;
+}
