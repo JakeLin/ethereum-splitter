@@ -163,13 +163,20 @@ contract('Splitter', accounts => {
 
   context('When owner pause the contract', () => {
     context('if the contract is unpaused', () => {
+      let tx;
       beforeEach(async () => {
         // Arrange & Act
-        await contract.methods.pause().send({from: owner});
+        tx = await contract.methods.pause().send({from: owner});
       });
   
       it('the contract should be paused', async () => {
         assert.strictEqual((await contract.methods.isPaused().call()), true);
+      });
+
+      it('should emit the LogPaused event', async () => {
+        // Assert
+        assert.strictEqual(tx.events.LogPaused.event, 'LogPaused');
+        assert.strictEqual(tx.events.LogPaused.returnValues.account, owner);
       });
     });
     
@@ -191,17 +198,24 @@ contract('Splitter', accounts => {
 
   context('When owner unPause the contract', () => {
     context('if the contract is paused', () => {
+      let tx;
       beforeEach(async () => {
         // Arrange
         await contract.methods.pause().send({from: owner});
 
         // Act
-        await contract.methods.unPause().send({from: owner});
+        tx = await contract.methods.unPause().send({from: owner});
       });
   
       it('the contract should be unPaused', async () => {
         // Assert
         assert.strictEqual((await contract.methods.isPaused().call()), false);
+      });
+
+      it('should emit the LogUnpaused event', async () => {
+        // Assert
+        assert.strictEqual(tx.events.LogUnpaused.event, 'LogUnpaused');
+        assert.strictEqual(tx.events.LogUnpaused.returnValues.account, owner);
       });
     });
     

@@ -3,6 +3,9 @@ pragma solidity >=0.4.21 <0.6.0;
 import "./Ownable.sol";
 
 contract Pausable is Ownable {
+  event LogPaused(address account);
+  event LogUnpaused(address account);
+
   bool private paused = false;
 
   modifier whenNotPaused() {
@@ -17,10 +20,12 @@ contract Pausable is Ownable {
   function pause() public onlyOwner {
     require(!paused, "Can't pause a paused contract!");
     paused = true;
+    emit LogPaused(msg.sender);
   }
 
   function unPause() public onlyOwner {
     require(paused, "Can't unPause a non-paused contract!");
     paused = false;
+    emit LogUnpaused(msg.sender);
   }
 }
