@@ -165,11 +165,13 @@ contract('Splitter', accounts => {
     context('if the contract is not paused', () => {
       let tx;
       beforeEach(async () => {
-        // Arrange & Act
+        // Arrange, because by default, the contract is not paused, no need to arrange.
+        // Act
         tx = await contract.methods.pause().send({from: owner});
       });
   
       it('the contract should be paused', async () => {
+        // Assert
         assert.strictEqual((await contract.methods.isPaused().call()), true);
       });
 
@@ -182,12 +184,12 @@ contract('Splitter', accounts => {
     
     context('if the contract is paused', () => {
       beforeEach(async () => {
-        // Arrange & Act
+        // Arrange
         await contract.methods.pause().send({from: owner});
       });
   
       it('should fail', async () => {
-        // Assert
+        // Act & Assert
         await truffleAssert.reverts(
           contract.methods.pause().send({from: owner}),
           'revert Can\'t pause a paused contract!'
