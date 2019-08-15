@@ -169,7 +169,7 @@ class App extends Component {
         const contractBalance = web3.utils.fromWei(await web3.eth.getBalance(contractAddress));
         this.setState({ splitMessage: `Transaction ${tx.transactionHash} got mined successfully.`, contractBalance });
       } else {
-        this.setState({ splitMessage: `Something went wrong.` });
+        this.setState({ splitMessage: `Something went wrong with transaction ${tx.transactionHash}.` });
       }
     } catch(e) {
       this.setState({ splitMessage: e.message });
@@ -242,7 +242,7 @@ class App extends Component {
         const contractBalance = web3.utils.fromWei(await web3.eth.getBalance(contractAddress));
         this.setState({ withdrawMessage: `Transaction ${tx.transactionHash} got mined successfully.`, contractBalance });
       } else {
-        this.setState({ withdrawMessage: `Something went wrong.` });
+        this.setState({ withdrawMessage: `Something went wrong with transaction ${tx.transactionHash}.` });
       };
     } catch(e) {
       this.setState({ withdrawMessage: e.message });
