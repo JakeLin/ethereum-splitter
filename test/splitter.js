@@ -15,7 +15,7 @@ contract('Splitter', accounts => {
 
   it('should deploy the contract correctly', async () => {
     assert.ok(contract);
-    assert.strictEqual((await contract.methods.owner().call()), owner);
+    assert.strictEqual((await contract.methods.getOwner().call()), owner);
   });
 
   context('When owner splits 0.02 ether (the number is even)', () => {

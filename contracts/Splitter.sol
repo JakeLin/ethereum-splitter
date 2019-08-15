@@ -10,11 +10,6 @@ contract Splitter is Pausable {
   event LogWithdrawn(address indexed sender, uint256 amount);
 
   mapping (address => uint256) public balances;
-  address public owner;
-
-  constructor() public {
-    owner = msg.sender;
-  }
 
   function split(address _beneficiary1, address _beneficiary2) external payable whenNotPaused {
     require(_beneficiary1 != address(0) && _beneficiary2 != address(0), "Beneficiary's address must not be zero!");
