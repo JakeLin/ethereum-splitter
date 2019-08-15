@@ -6,7 +6,11 @@ contract Pausable is Ownable {
   event LogPaused(address indexed account);
   event LogUnpaused(address indexed account);
 
-  bool private paused = false;
+  bool private paused;
+
+  constructor() public {
+    paused = false;
+  }
 
   modifier whenNotPaused() {
     require(!paused, "Can't do that when the contract is paused!");
