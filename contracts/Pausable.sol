@@ -21,8 +21,7 @@ contract Pausable is Ownable {
     return paused;
   }
 
-  function pause() public onlyOwner {
-    require(!paused, "Can't pause a paused contract!");
+  function pause() public onlyOwner whenRunning {
     paused = true;
     emit LogPaused(msg.sender);
   }

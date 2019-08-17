@@ -211,7 +211,7 @@ contract('Splitter', accounts => {
         // Act & Assert
         await truffleAssert.reverts(
           contract.methods.pause().send({from: owner}),
-          'revert Can\'t pause a paused contract!'
+          'revert Can\'t do that when the contract is paused!'
         );
       });
     });
