@@ -18,7 +18,7 @@ contract('Splitter', accounts => {
     assert.strictEqual((await contract.methods.getOwner().call()), owner);
   });
 
-  context('When change the owner)', () => {
+  context('When change the owner', () => {
     let tx;
     beforeEach(async () => {
       // Arrange & Act
@@ -290,6 +290,74 @@ contract('Splitter', accounts => {
       await truffleAssert.reverts(
         contract.methods.withdraw().send({from: bob}),
         'Can\'t do that when the contract is paused!'
+      );
+    });
+  });
+
+  context('When owner kills the contract', () => {
+    context('if the contract is alive', () => {
+      let tx;
+      beforeEach(async () => {
+        // Arrange & Act
+        tx = await contract.methods.kill().send({from: owner});
+      });
+  
+      it('should kill the contract', async () => {
+        assert.strictEqual((await contract.methods.isKilled().call()), true);
+      });
+  
+      it('should emit the LogOwnerChanged event', async () => {
+        // Assert
+        assert.strictEqual(tx.events.LogKilled.event, 'LogKilled');
+        assert.strictEqual(tx.events.LogKilled.returnValues.account, owner);
+      });
+    });
+    
+    context('if the contract is killed', () => {
+      beforeEach(async () => {
+        // Arrange
+        await contract.methods.kill().send({from: owner});
+      });
+  
+      it('should fail', async () => {
+        // Act & Assert
+        await truffleAssert.reverts(
+          contract.methods.kill().send({from: owner}),
+          'revert Can\'t do that when the contract is killed!'
+        );
+      });
+    });
+  });
+
+  context('When not owner kills the contract', () => {
+    it('should fail', async () => {
+      // Act & Assert
+      await truffleAssert.reverts(
+        contract.methods.kill().send({from: someoneElse}),
+        'Only owner can do this!'
+      );
+    });
+  });
+
+  context('When the contract is killed', () => {
+    beforeEach(async () => {
+      // Arrange
+      await contract.methods.kill().send({from: owner});
+    });
+
+    it('should fail to split', async () => {
+      // Act & Assert
+      await truffleAssert.reverts(
+        contract.methods.split(bob, carol).send({from: owner, value: toWei('0.02', 'ether')}),
+        'Can\'t do that when the contract is killed!'
+      );
+    });
+
+    it('should fail to withdraw', async () => {
+      // Act & Assert
+      await truffleAssert.reverts(
+        contract.methods.withdraw().send({from: bob}),
+        'Can\'t do that when the contract is killed!'
       );
     });
   });
