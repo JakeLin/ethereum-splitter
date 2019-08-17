@@ -12,6 +12,11 @@ contract Killable is Ownable {
     _;
   }
 
+  modifier whenKilled() {
+    require(killed, "Can't do that when the contract is alive!");
+    _;
+  }
+
   function isKilled() public view returns (bool) {
     return killed;
   }

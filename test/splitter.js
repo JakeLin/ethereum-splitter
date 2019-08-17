@@ -298,11 +298,12 @@ contract('Splitter', accounts => {
     context('if the contract is alive', () => {
       let tx;
       beforeEach(async () => {
-        // Arrange & Act
+        // Act
         tx = await contract.methods.kill().send({from: owner});
       });
   
       it('should kill the contract', async () => {
+        // Assert
         assert.strictEqual((await contract.methods.isKilled().call()), true);
       });
   
@@ -359,6 +360,66 @@ contract('Splitter', accounts => {
         contract.methods.withdraw().send({from: bob}),
         'Can\'t do that when the contract is killed!'
       );
+    });
+  });
+
+  context('When owner withdraws all balance from the contract', () => {
+    context('if the contract is alive', () => {
+      it('should fail to withdraw', async () => {
+        // Act & Assert
+        await truffleAssert.reverts(
+          contract.methods.withdrawAll().send({from: owner}),
+          'Can\'t do that when the contract is alive!'
+        );
+      });
+    });
+
+    context('if the contract is killed with zero balance', () => {
+      beforeEach(async () => {
+        // Arrange & Act
+        await contract.methods.kill().send({from: owner});
+      });
+
+      it('should fail to withdraw all', async () => {
+        // Act & Assert
+        await truffleAssert.reverts(
+          contract.methods.withdrawAll().send({from: owner}),
+          'Balance must be grater than zero to withdraw!'
+        );
+      });
+    });
+
+    context('if the contract is killed with non-zero balance', () => {
+      let tx;
+      let ownerBeforeWithdrawBalance;
+      beforeEach(async () => {
+        // Arrange
+        await contract.methods.split(bob, carol).send({from: owner, value: toWei('2', 'ether')});
+        await contract.methods.kill().send({from: owner});
+        ownerBeforeWithdrawBalance = toBN(await web3.eth.getBalance(owner));
+
+        // Act
+        tx = await contract.methods.withdrawAll().send({from: owner});
+      });
+
+      it('should withdraw the ether to owner\'s account', async () => {
+        // Assert
+        const gasPrice = toBN((await web3.eth.getTransaction(tx.transactionHash)).gasPrice);
+        const gasFee = toBN(tx.gasUsed).mul(gasPrice);
+        assert.strictEqual(toBN((await web3.eth.getBalance(owner))).sub(ownerBeforeWithdrawBalance).toString(10), toBN(toWei('2', 'ether')).sub(gasFee).toString(10));
+      });
+  
+      it('the contract should set to zero', async () => {
+        // Assert
+        assert.strictEqual((await web3.eth.getBalance(contract.options.address)), '0');
+      });
+  
+      it('should emit the LogWithdrawn event', async () => {
+        // Assert
+        assert.strictEqual(tx.events.LogWithdrawn.event, 'LogWithdrawn');
+        assert.strictEqual(tx.events.LogWithdrawn.returnValues.sender, owner);
+        assert.strictEqual(tx.events.LogWithdrawn.returnValues.amount, toWei('2', 'ether'));
+      });
     });
   });
 });
