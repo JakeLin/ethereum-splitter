@@ -18,8 +18,10 @@ contract Splitter is Pausable, Killable {
   function split(address _beneficiary1, address _beneficiary2) external payable whenRunning whenAlive {
     require(_beneficiary1 != address(0) && _beneficiary2 != address(0), "Beneficiary's address must not be zero!");
     require(msg.value > 0, "Must split more than zero ether!");
-    require(msg.value.mod(2) == 0, "The ether to be splitted must be even!");
 
+    if (msg.value.mod(2) == 1) {
+      balances[msg.sender] = balances[msg.sender].add(1);
+    }
     uint256 half = msg.value.div(2);
     balances[_beneficiary1] = balances[_beneficiary1].add(half);
     balances[_beneficiary2] = balances[_beneficiary2].add(half);
