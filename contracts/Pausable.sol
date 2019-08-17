@@ -27,8 +27,8 @@ contract Pausable is Ownable {
     emit LogPaused(msg.sender);
   }
 
-  function unpause() public onlyOwner {
-    require(paused, "Can't unpause a non-paused contract!");
+  function resume() public onlyOwner {
+    require(paused, "Can't resume a non-paused contract!");
     paused = false;
     emit LogUnpaused(msg.sender);
   }

@@ -180,7 +180,7 @@ contract('Splitter', accounts => {
     });
   });
 
-  context('When owner pause the contract', () => {
+  context('When owner pauses the contract', () => {
     context('if the contract is not paused', () => {
       let tx;
       beforeEach(async () => {
@@ -217,7 +217,7 @@ contract('Splitter', accounts => {
     });
   });
 
-  context('When owner unpause the contract', () => {
+  context('When owner resumes the contract', () => {
     context('if the contract is paused', () => {
       let tx;
       beforeEach(async () => {
@@ -225,7 +225,7 @@ contract('Splitter', accounts => {
         await contract.methods.pause().send({from: owner});
 
         // Act
-        tx = await contract.methods.unpause().send({from: owner});
+        tx = await contract.methods.resume().send({from: owner});
       });
   
       it('the contract should not be paused', async () => {
@@ -244,14 +244,14 @@ contract('Splitter', accounts => {
       it('should fail', async () => {
         // Act & Assert
         await truffleAssert.reverts(
-          contract.methods.unpause().send({from: owner}),
-          'revert Can\'t unpause a non-paused contract!'
+          contract.methods.resume().send({from: owner}),
+          'revert Can\'t resume a non-paused contract!'
         );
       });
     });
   });
 
-  context('When not owner pause the contract', () => {
+  context('When not owner pauses the contract', () => {
     it('should fail', async () => {
       // Act & Assert
       await truffleAssert.reverts(
@@ -261,11 +261,11 @@ contract('Splitter', accounts => {
     });
   });
 
-  context('When not owner unpause the contract', () => {
+  context('When not owner resumes the contract', () => {
     it('should fail', async () => {
       // Act & Assert
       await truffleAssert.reverts(
-        contract.methods.unpause().send({from: someoneElse}),
+        contract.methods.resume().send({from: someoneElse}),
         'Only owner can do this!'
       );
     });
