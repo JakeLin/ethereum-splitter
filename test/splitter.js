@@ -18,6 +18,25 @@ contract('Splitter', accounts => {
     assert.strictEqual((await contract.methods.getOwner().call()), owner);
   });
 
+  context('When change the owner)', () => {
+    let tx;
+    beforeEach(async () => {
+      // Arrange & Act
+      tx = await contract.methods.changeOwner(bob).send({from: owner});
+    });
+
+    it('should change the owner to Bob', async () => {
+      assert.strictEqual((await contract.methods.getOwner().call()), bob);
+    });
+
+    it('should emit the LogOwnerChanged event', async () => {
+      // Assert
+      assert.strictEqual(tx.events.LogOwnerChanged.event, 'LogOwnerChanged');
+      assert.strictEqual(tx.events.LogOwnerChanged.returnValues.previousOwner, owner);
+      assert.strictEqual(tx.events.LogOwnerChanged.returnValues.newOwner, bob);
+    });
+  });
+
   context('When owner splits 0.02 ether (the number is even)', () => {
     let tx;
     beforeEach(async () => {
