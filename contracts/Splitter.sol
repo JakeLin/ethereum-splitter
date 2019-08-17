@@ -11,6 +11,9 @@ contract Splitter is Pausable {
 
   mapping (address => uint256) public balances;
 
+  constructor() Pausable(false) public {
+  }
+
   function split(address _beneficiary1, address _beneficiary2) external payable whenNotPaused {
     require(_beneficiary1 != address(0) && _beneficiary2 != address(0), "Beneficiary's address must not be zero!");
     require(msg.value > 0, "Must split more than zero ether!");

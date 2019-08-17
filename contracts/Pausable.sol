@@ -8,8 +8,8 @@ contract Pausable is Ownable {
 
   bool private paused;
 
-  constructor() public {
-    paused = false;
+  constructor(bool _paused) public {
+    paused = _paused;
   }
 
   modifier whenNotPaused() {
