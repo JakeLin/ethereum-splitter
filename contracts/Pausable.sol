@@ -12,7 +12,7 @@ contract Pausable is Ownable {
     paused = _paused;
   }
 
-  modifier whenNotPaused() {
+  modifier whenRunning() {
     require(!paused, "Can't do that when the contract is paused!");
     _;
   }
