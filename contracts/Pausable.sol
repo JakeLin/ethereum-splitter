@@ -1,16 +1,15 @@
 pragma solidity >=0.4.21 <0.6.0;
 
-contract Pausable {
-  address public owner;
-  bool public paused;
+import "./Ownable.sol";
+
+contract Pausable is Ownable {
+  event LogPaused(address indexed account);
+  event LogUnpaused(address indexed account);
+
+  bool private paused;
 
   constructor() public {
-    owner = msg.sender;
-  }
-
-  modifier onlyOwner() {
-    require(msg.sender == owner, "Only owner can do this!");
-    _;
+    paused = false;
   }
 
   modifier whenNotPaused() {
@@ -18,13 +17,19 @@ contract Pausable {
     _;
   }
 
+  function isPaused() public view returns (bool) {
+    return paused;
+  }
+
   function pause() public onlyOwner {
     require(!paused, "Can't pause a paused contract!");
     paused = true;
+    emit LogPaused(msg.sender);
   }
 
-  function unPause() public onlyOwner {
-    require(paused, "Can't unPause a non-paused contract!");
+  function unpause() public onlyOwner {
+    require(paused, "Can't unpause a non-paused contract!");
     paused = false;
+    emit LogUnpaused(msg.sender);
   }
 }

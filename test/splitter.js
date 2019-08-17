@@ -15,7 +15,7 @@ contract('Splitter', accounts => {
 
   it('should deploy the contract correctly', async () => {
     assert.ok(contract);
-    assert.strictEqual((await contract.methods.owner().call()), owner);
+    assert.strictEqual((await contract.methods.getOwner().call()), owner);
   });
 
   context('When owner splits 0.02 ether (the number is even)', () => {
@@ -162,25 +162,34 @@ contract('Splitter', accounts => {
   });
 
   context('When owner pause the contract', () => {
-    context('if the contract is unpaused', () => {
+    context('if the contract is not paused', () => {
+      let tx;
       beforeEach(async () => {
-        // Arrange & Act
-        await contract.methods.pause().send({from: owner});
+        // Arrange, because by default, the contract is not paused, no need to arrange.
+        // Act
+        tx = await contract.methods.pause().send({from: owner});
       });
   
       it('the contract should be paused', async () => {
-        assert.strictEqual((await contract.methods.paused().call()), true);
+        // Assert
+        assert.strictEqual((await contract.methods.isPaused().call()), true);
+      });
+
+      it('should emit the LogPaused event', async () => {
+        // Assert
+        assert.strictEqual(tx.events.LogPaused.event, 'LogPaused');
+        assert.strictEqual(tx.events.LogPaused.returnValues.account, owner);
       });
     });
     
     context('if the contract is paused', () => {
       beforeEach(async () => {
-        // Arrange & Act
+        // Arrange
         await contract.methods.pause().send({from: owner});
       });
   
       it('should fail', async () => {
-        // Assert
+        // Act & Assert
         await truffleAssert.reverts(
           contract.methods.pause().send({from: owner}),
           'revert Can\'t pause a paused contract!'
@@ -189,28 +198,35 @@ contract('Splitter', accounts => {
     });
   });
 
-  context('When owner unPause the contract', () => {
+  context('When owner unpause the contract', () => {
     context('if the contract is paused', () => {
+      let tx;
       beforeEach(async () => {
         // Arrange
         await contract.methods.pause().send({from: owner});
 
         // Act
-        await contract.methods.unPause().send({from: owner});
+        tx = await contract.methods.unpause().send({from: owner});
       });
   
-      it('the contract should be unPaused', async () => {
+      it('the contract should not be paused', async () => {
         // Assert
-        assert.strictEqual((await contract.methods.paused().call()), false);
+        assert.strictEqual((await contract.methods.isPaused().call()), false);
+      });
+
+      it('should emit the LogUnpaused event', async () => {
+        // Assert
+        assert.strictEqual(tx.events.LogUnpaused.event, 'LogUnpaused');
+        assert.strictEqual(tx.events.LogUnpaused.returnValues.account, owner);
       });
     });
     
-    context('if the contract is unPaused', () => {
+    context('if the contract is not paused', () => {
       it('should fail', async () => {
         // Act & Assert
         await truffleAssert.reverts(
-          contract.methods.unPause().send({from: owner}),
-          'revert Can\'t unPause a non-paused contract!'
+          contract.methods.unpause().send({from: owner}),
+          'revert Can\'t unpause a non-paused contract!'
         );
       });
     });
@@ -226,11 +242,11 @@ contract('Splitter', accounts => {
     });
   });
 
-  context('When not owner unPause the contract', () => {
+  context('When not owner unpause the contract', () => {
     it('should fail', async () => {
       // Act & Assert
       await truffleAssert.reverts(
-        contract.methods.unPause().send({from: someoneElse}),
+        contract.methods.unpause().send({from: someoneElse}),
         'Only owner can do this!'
       );
     });

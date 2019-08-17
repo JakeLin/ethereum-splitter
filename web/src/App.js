@@ -14,9 +14,6 @@ import './App.css';
 
 const { abi, networks } = require('./contracts/Splitter.json');
 
-// Support ropsten testnet
-const contractAddress = networks['3'].address;
-
 class App extends Component {
   state = {
     owner: '',
@@ -28,6 +25,12 @@ class App extends Component {
     etherToSplit: '1',
     beneficiary1Address: '',
     beneficiary2Address: '',
+    contract: null,
+    accounts: [],
+    contractBalance: null,
+    network: null,
+    web3: null,
+    contractAddress: null,
   };
 
   constructor(props) {
@@ -37,27 +40,30 @@ class App extends Component {
 
   async componentDidMount() {
     try {
+      let web3;
       // Checking if Web3 has been injected by the browser (Mist/MetaMask)
       if (typeof window.web3 !== 'undefined') {
         // Use Mist/MetaMask's provider.
-        const web3 = new Web3(window.web3.currentProvider);
+        web3 = new Web3(window.web3.currentProvider);
         console.log('Web3 Detected! ' + web3.currentProvider.constructor.name);
-
-        const accounts = await web3.eth.getAccounts();
-        if (accounts.length === 0) {
-          this.setState({ hasError: true, message: 'Please sign in MetaMask and refresh the page!' });
-          return;
-        }
-
-        const contract = new web3.eth.Contract(abi, contractAddress)
-        const network = await web3.eth.net.getNetworkType();
-        const owner = await contract.methods.owner().call();
-        const contractBalance = web3.utils.fromWei(await web3.eth.getBalance(contractAddress));
-        this.setState({ web3, contract, owner, contractBalance, accounts, network, contractLoaded: true });
       } else {
-        console.log('No Web3 Detected!');
-        this.setState({ hasError: true, message: 'Please install MetaMask to use this app!' });
+        console.log('No Web3 Detected, use local node 127.0.0.1:8545');
+        web3 = new Web3(new Web3.providers.HttpProvider('http://127.0.0.1:8545'));
       }
+
+      const accounts = await web3.eth.getAccounts();
+      if (accounts.length === 0) {
+        this.setState({ hasError: true, message: 'Please sign in MetaMask and refresh the page!' });
+        return;
+      }
+
+      const networkId = await web3.eth.net.getId();
+      const contractAddress = networks[networkId].address;
+      const contract = new web3.eth.Contract(abi, contractAddress)
+      const network = await web3.eth.net.getNetworkType();
+      const owner = await contract.methods.owner().call();
+      const contractBalance = web3.utils.fromWei(await web3.eth.getBalance(contractAddress));
+      this.setState({ web3, contract, owner, contractBalance, accounts, network, contractAddress, contractLoaded: true });
     } catch(e) {
       console.error(e);
       this.setState({ hasError: true, message: 'Something went wrong!' });
@@ -69,7 +75,7 @@ class App extends Component {
   };
 
   renderContractInfo = () => {
-    const { contractLoaded, network, contractBalance } = this.state;
+    const { contractLoaded, network, contractBalance, contractAddress } = this.state;
     if (contractLoaded) {
       const url = `//ropsten.etherscan.io/address/${contractAddress}`
       return (
@@ -142,7 +148,7 @@ class App extends Component {
   };
 
   split = async () => {
-    const { web3, contract, accounts, etherToSplit, beneficiary1Address, beneficiary2Address } = this.state;
+    const { web3, contract, accounts, etherToSplit, beneficiary1Address, beneficiary2Address, contractAddress } = this.state;
     if (!web3.utils.isAddress(beneficiary1Address)) {
       this.setState({ splitMessage: 'Beneficiary 1 address is invalid!' });
       return;
@@ -153,12 +159,18 @@ class App extends Component {
 
     try {
       this.setState({ splitMessage: 'Submitting the transaction.' });
-      await contract.methods.split(beneficiary1Address, beneficiary2Address).send({
+      const tx = await contract.methods.split(beneficiary1Address, beneficiary2Address).send({
         from: accounts[0],
         value: web3.utils.toWei(etherToSplit, 'ether')
+      }).on("transactionHash", txHash => {
+        this.setState({ splitMessage: `Transaction ${txHash} submitted, waiting for the network to mine` });
       });
-      const contractBalance = web3.utils.fromWei(await web3.eth.getBalance(contractAddress));
-      this.setState({ splitMessage: `Splitted successfully.`, contractBalance });
+      if (tx.status) {
+        const contractBalance = web3.utils.fromWei(await web3.eth.getBalance(contractAddress));
+        this.setState({ splitMessage: `Transaction ${tx.transactionHash} got mined successfully.`, contractBalance });
+      } else {
+        this.setState({ splitMessage: `Something went wrong with transaction ${tx.transactionHash}.` });
+      }
     } catch(e) {
       this.setState({ splitMessage: e.message });
     }
@@ -217,15 +229,21 @@ class App extends Component {
   };
 
   withdraw = async () => {
-    const { web3, contract, accounts } = this.state;
+    const { web3, contract, accounts, contractAddress } = this.state;
 
     try {
       this.setState({ withdrawMessage: 'Submitting the transaction.' });
-      await contract.methods.withdraw().send({
+      const tx = await contract.methods.withdraw().send({
         from: accounts[0]
+      }).on("transactionHash", txHash => {
+        this.setState({ withdrawMessage: `Transaction ${txHash} submitted, waiting for the network to mine` });
       });
-      const contractBalance = web3.utils.fromWei(await web3.eth.getBalance(contractAddress));
-      this.setState({ withdrawMessage: `Withdrawn successfully.`, contractBalance });
+      if (tx.status) {
+        const contractBalance = web3.utils.fromWei(await web3.eth.getBalance(contractAddress));
+        this.setState({ withdrawMessage: `Transaction ${tx.transactionHash} got mined successfully.`, contractBalance });
+      } else {
+        this.setState({ withdrawMessage: `Something went wrong with transaction ${tx.transactionHash}.` });
+      };
     } catch(e) {
       this.setState({ withdrawMessage: e.message });
     }
@@ -252,6 +270,17 @@ class App extends Component {
     );
   };
 
+  renderError = () => {
+    const { contractLoaded, hasError, message } = this.state;
+    if (contractLoaded && !hasError) {
+      return null;
+    }
+
+    return (
+      <span className="error-message">{ message }</span>
+    );
+  };
+
   render() {
     return (
       <div className="cards">
@@ -259,6 +288,7 @@ class App extends Component {
         { this.renderCheckAccountBalances() }
         { this.renderSplit() }
         { this.renderWithdraw() }
+        { this.renderError() }
       </div>
     );
   }
