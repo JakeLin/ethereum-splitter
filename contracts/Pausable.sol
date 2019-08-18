@@ -8,11 +8,11 @@ contract Pausable is Ownable {
 
   bool private paused;
 
-  constructor() public {
-    paused = false;
+  constructor(bool _paused) public {
+    paused = _paused;
   }
 
-  modifier whenNotPaused() {
+  modifier whenRunning() {
     require(!paused, "Can't do that when the contract is paused!");
     _;
   }
@@ -21,14 +21,13 @@ contract Pausable is Ownable {
     return paused;
   }
 
-  function pause() public onlyOwner {
-    require(!paused, "Can't pause a paused contract!");
+  function pause() public onlyOwner whenRunning {
     paused = true;
     emit LogPaused(msg.sender);
   }
 
-  function unpause() public onlyOwner {
-    require(paused, "Can't unpause a non-paused contract!");
+  function resume() public onlyOwner {
+    require(paused, "Can't resume a non-paused contract!");
     paused = false;
     emit LogUnpaused(msg.sender);
   }

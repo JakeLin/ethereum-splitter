@@ -18,6 +18,25 @@ contract('Splitter', accounts => {
     assert.strictEqual((await contract.methods.getOwner().call()), owner);
   });
 
+  context('When change the owner', () => {
+    let tx;
+    beforeEach(async () => {
+      // Arrange & Act
+      tx = await contract.methods.changeOwner(bob).send({from: owner});
+    });
+
+    it('should change the owner to Bob', async () => {
+      assert.strictEqual((await contract.methods.getOwner().call()), bob);
+    });
+
+    it('should emit the LogOwnerChanged event', async () => {
+      // Assert
+      assert.strictEqual(tx.events.LogOwnerChanged.event, 'LogOwnerChanged');
+      assert.strictEqual(tx.events.LogOwnerChanged.returnValues.previousOwner, owner);
+      assert.strictEqual(tx.events.LogOwnerChanged.returnValues.newOwner, bob);
+    });
+  });
+
   context('When owner splits 0.02 ether (the number is even)', () => {
     let tx;
     beforeEach(async () => {
@@ -62,12 +81,34 @@ contract('Splitter', accounts => {
   });
 
   context('When owner splits 3 wei (the number is odd)', () => {
-    it('should fail', async () => {
-      // Act & Assert
-      await truffleAssert.reverts(
-        contract.methods.split(bob, carol).send({from: owner, value: 3}),
-        'The ether to be splitted must be even!'
-      );
+    beforeEach(async () => {
+      // Act
+      tx = await contract.methods.split(bob, carol).send({from: owner, value: 3});
+    });
+
+    it('should split the ether to Bob and Carol\'s balance evenly', async () => {
+      // Assert
+      assert.strictEqual((await contract.methods.balances(bob).call()), '1');
+      assert.strictEqual((await contract.methods.balances(carol).call()), '1');
+    });
+
+    it('should credit the remainder (1 wei) to the sender\'s balance', async () => {
+      // Assert
+      assert.strictEqual((await contract.methods.balances(owner).call()), '1');
+    });
+
+    it('the contract balance should increase 3 wei', async () => {
+      // Assert
+      assert.strictEqual(await web3.eth.getBalance(contract.options.address), '3');
+    });
+
+    it('should emit the LogSplitted event', async () => {
+      // Assert
+      assert.strictEqual(tx.events.LogSplitted.event, 'LogSplitted');
+      assert.strictEqual(tx.events.LogSplitted.returnValues.sender, owner);
+      assert.strictEqual(tx.events.LogSplitted.returnValues.amount, '3');
+      assert.strictEqual(tx.events.LogSplitted.returnValues.beneficiary1, bob);
+      assert.strictEqual(tx.events.LogSplitted.returnValues.beneficiary2, carol);
     });
   });
 
@@ -161,7 +202,7 @@ contract('Splitter', accounts => {
     });
   });
 
-  context('When owner pause the contract', () => {
+  context('When owner pauses the contract', () => {
     context('if the contract is not paused', () => {
       let tx;
       beforeEach(async () => {
@@ -192,13 +233,13 @@ contract('Splitter', accounts => {
         // Act & Assert
         await truffleAssert.reverts(
           contract.methods.pause().send({from: owner}),
-          'revert Can\'t pause a paused contract!'
+          'revert Can\'t do that when the contract is paused!'
         );
       });
     });
   });
 
-  context('When owner unpause the contract', () => {
+  context('When owner resumes the contract', () => {
     context('if the contract is paused', () => {
       let tx;
       beforeEach(async () => {
@@ -206,7 +247,7 @@ contract('Splitter', accounts => {
         await contract.methods.pause().send({from: owner});
 
         // Act
-        tx = await contract.methods.unpause().send({from: owner});
+        tx = await contract.methods.resume().send({from: owner});
       });
   
       it('the contract should not be paused', async () => {
@@ -225,14 +266,14 @@ contract('Splitter', accounts => {
       it('should fail', async () => {
         // Act & Assert
         await truffleAssert.reverts(
-          contract.methods.unpause().send({from: owner}),
-          'revert Can\'t unpause a non-paused contract!'
+          contract.methods.resume().send({from: owner}),
+          'revert Can\'t resume a non-paused contract!'
         );
       });
     });
   });
 
-  context('When not owner pause the contract', () => {
+  context('When not owner pauses the contract', () => {
     it('should fail', async () => {
       // Act & Assert
       await truffleAssert.reverts(
@@ -242,11 +283,11 @@ contract('Splitter', accounts => {
     });
   });
 
-  context('When not owner unpause the contract', () => {
+  context('When not owner resumes the contract', () => {
     it('should fail', async () => {
       // Act & Assert
       await truffleAssert.reverts(
-        contract.methods.unpause().send({from: someoneElse}),
+        contract.methods.resume().send({from: someoneElse}),
         'Only owner can do this!'
       );
     });
@@ -272,6 +313,135 @@ contract('Splitter', accounts => {
         contract.methods.withdraw().send({from: bob}),
         'Can\'t do that when the contract is paused!'
       );
+    });
+  });
+
+  context('When owner kills the contract', () => {
+    context('if the contract is alive', () => {
+      let tx;
+      beforeEach(async () => {
+        // Act
+        tx = await contract.methods.kill().send({from: owner});
+      });
+  
+      it('should kill the contract', async () => {
+        // Assert
+        assert.strictEqual((await contract.methods.isKilled().call()), true);
+      });
+  
+      it('should emit the LogOwnerChanged event', async () => {
+        // Assert
+        assert.strictEqual(tx.events.LogKilled.event, 'LogKilled');
+        assert.strictEqual(tx.events.LogKilled.returnValues.account, owner);
+      });
+    });
+    
+    context('if the contract is killed', () => {
+      beforeEach(async () => {
+        // Arrange
+        await contract.methods.kill().send({from: owner});
+      });
+  
+      it('should fail', async () => {
+        // Act & Assert
+        await truffleAssert.reverts(
+          contract.methods.kill().send({from: owner}),
+          'revert Can\'t do that when the contract is killed!'
+        );
+      });
+    });
+  });
+
+  context('When not owner kills the contract', () => {
+    it('should fail', async () => {
+      // Act & Assert
+      await truffleAssert.reverts(
+        contract.methods.kill().send({from: someoneElse}),
+        'Only owner can do this!'
+      );
+    });
+  });
+
+  context('When the contract is killed', () => {
+    beforeEach(async () => {
+      // Arrange
+      await contract.methods.kill().send({from: owner});
+    });
+
+    it('should fail to split', async () => {
+      // Act & Assert
+      await truffleAssert.reverts(
+        contract.methods.split(bob, carol).send({from: owner, value: toWei('0.02', 'ether')}),
+        'Can\'t do that when the contract is killed!'
+      );
+    });
+
+    it('should fail to withdraw', async () => {
+      // Act & Assert
+      await truffleAssert.reverts(
+        contract.methods.withdraw().send({from: bob}),
+        'Can\'t do that when the contract is killed!'
+      );
+    });
+  });
+
+  context('When owner withdraws all balance from the contract', () => {
+    context('if the contract is alive', () => {
+      it('should fail to withdraw', async () => {
+        // Act & Assert
+        await truffleAssert.reverts(
+          contract.methods.withdrawAll().send({from: owner}),
+          'Can\'t do that when the contract is alive!'
+        );
+      });
+    });
+
+    context('if the contract is killed with zero balance', () => {
+      beforeEach(async () => {
+        // Arrange & Act
+        await contract.methods.kill().send({from: owner});
+      });
+
+      it('should fail to withdraw all', async () => {
+        // Act & Assert
+        await truffleAssert.reverts(
+          contract.methods.withdrawAll().send({from: owner}),
+          'Balance must be grater than zero to withdraw!'
+        );
+      });
+    });
+
+    context('if the contract is killed with non-zero balance', () => {
+      let tx;
+      let ownerBeforeWithdrawBalance;
+      beforeEach(async () => {
+        // Arrange
+        await contract.methods.split(bob, carol).send({from: owner, value: toWei('2', 'ether')});
+        await contract.methods.kill().send({from: owner});
+        ownerBeforeWithdrawBalance = toBN(await web3.eth.getBalance(owner));
+
+        // Act
+        tx = await contract.methods.withdrawAll().send({from: owner});
+      });
+
+      it('should withdraw the ether to owner\'s account', async () => {
+        // Assert
+        const gasPrice = toBN((await web3.eth.getTransaction(tx.transactionHash)).gasPrice);
+        const gasFee = toBN(tx.gasUsed).mul(gasPrice);
+        assert.strictEqual(toBN((await web3.eth.getBalance(owner))).sub(ownerBeforeWithdrawBalance).toString(10), toBN(toWei('2', 'ether')).sub(gasFee).toString(10));
+      });
+  
+      it('the contract should set to zero', async () => {
+        // Assert
+        assert.strictEqual((await web3.eth.getBalance(contract.options.address)), '0');
+      });
+  
+      it('should emit the LogWithdrawn event', async () => {
+        // Assert
+        assert.strictEqual(tx.events.LogWithdrawn.event, 'LogWithdrawn');
+        assert.strictEqual(tx.events.LogWithdrawn.returnValues.sender, owner);
+        assert.strictEqual(tx.events.LogWithdrawn.returnValues.amount, toWei('2', 'ether'));
+      });
     });
   });
 });
