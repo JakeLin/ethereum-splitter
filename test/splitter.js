@@ -396,22 +396,7 @@ contract('Splitter', accounts => {
       });
     });
 
-    context('if the contract is killed with zero balance', () => {
-      beforeEach(async () => {
-        // Arrange & Act
-        await contract.methods.kill().send({from: owner});
-      });
-
-      it('should fail to withdraw all', async () => {
-        // Act & Assert
-        await truffleAssert.reverts(
-          contract.methods.withdrawAll().send({from: owner}),
-          'Balance must be grater than zero to withdraw!'
-        );
-      });
-    });
-
-    context('if the contract is killed with non-zero balance', () => {
+    context('if the contract is killed', () => {
       let tx;
       let ownerBeforeWithdrawBalance;
       beforeEach(async () => {

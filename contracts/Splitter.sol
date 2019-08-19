@@ -38,8 +38,6 @@ contract Splitter is Pausable, Killable {
 
   function withdrawAll() external onlyOwner whenKilled {
     uint256 balanceToWithdraw = address(this).balance;
-    require(balanceToWithdraw > 0, "Balance must be grater than zero to withdraw!");
-    balances[msg.sender] = 0;
     emit LogWithdrawn(msg.sender, balanceToWithdraw);
     msg.sender.transfer(balanceToWithdraw);
   }
