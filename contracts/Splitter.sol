@@ -2,9 +2,8 @@ pragma solidity >=0.4.21 <0.6.0;
 
 import "./SafeMath.sol";
 import "./Pausable.sol";
-import "./Killable.sol";
 
-contract Splitter is Pausable, Killable {
+contract Splitter is Pausable {
   using SafeMath for uint256;
 
   event LogSplitted(address indexed sender, uint256 amount, address indexed beneficiary1, address indexed beneficiary2);
