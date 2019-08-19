@@ -11,7 +11,7 @@ contract Splitter is Pausable {
 
   mapping (address => uint256) public balances;
 
-  constructor() Pausable(false) public {
+  constructor(bool paused) Pausable(paused) public {
   }
 
   function split(address _beneficiary1, address _beneficiary2) external payable whenRunning whenAlive {

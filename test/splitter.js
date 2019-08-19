@@ -10,7 +10,7 @@ contract('Splitter', accounts => {
 
   let contract;
   beforeEach(async () => {
-    contract = (await Splitter.new({ from: owner, gas: 3000000 })).contract;
+    contract = (await Splitter.new(false, { from: owner, gas: 3000000 })).contract;
   });
 
   it('should deploy the contract correctly', async () => {
