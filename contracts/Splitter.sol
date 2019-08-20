@@ -2,9 +2,8 @@ pragma solidity >=0.4.21 <0.6.0;
 
 import "./SafeMath.sol";
 import "./Pausable.sol";
-import "./Killable.sol";
 
-contract Splitter is Pausable, Killable {
+contract Splitter is Pausable {
   using SafeMath for uint256;
 
   event LogSplitted(address indexed sender, uint256 amount, address indexed beneficiary1, address indexed beneficiary2);
@@ -12,7 +11,7 @@ contract Splitter is Pausable, Killable {
 
   mapping (address => uint256) public balances;
 
-  constructor() Pausable(false) public {
+  constructor(bool paused) Pausable(paused) public {
   }
 
   function split(address _beneficiary1, address _beneficiary2) external payable whenRunning whenAlive {
@@ -38,8 +37,6 @@ contract Splitter is Pausable, Killable {
 
   function withdrawAll() external onlyOwner whenKilled {
     uint256 balanceToWithdraw = address(this).balance;
-    require(balanceToWithdraw > 0, "Balance must be grater than zero to withdraw!");
-    balances[msg.sender] = 0;
     emit LogWithdrawn(msg.sender, balanceToWithdraw);
     msg.sender.transfer(balanceToWithdraw);
   }

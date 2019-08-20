@@ -10,7 +10,7 @@ contract('Splitter', accounts => {
 
   let contract;
   beforeEach(async () => {
-    contract = (await Splitter.new({ from: owner, gas: 3000000 })).contract;
+    contract = (await Splitter.new(false, { from: owner, gas: 3000000 })).contract;
   });
 
   it('should deploy the contract correctly', async () => {
@@ -233,7 +233,7 @@ contract('Splitter', accounts => {
         // Act & Assert
         await truffleAssert.reverts(
           contract.methods.pause().send({from: owner}),
-          'revert Can\'t do that when the contract is paused!'
+          'Can\'t do that when the contract is paused!'
         );
       });
     });
@@ -267,7 +267,7 @@ contract('Splitter', accounts => {
         // Act & Assert
         await truffleAssert.reverts(
           contract.methods.resume().send({from: owner}),
-          'revert Can\'t resume a non-paused contract!'
+          'revert Can\'t do that when the contract is running!'
         );
       });
     });
@@ -317,10 +317,11 @@ contract('Splitter', accounts => {
   });
 
   context('When owner kills the contract', () => {
-    context('if the contract is alive', () => {
+    context('if the contract is alive and paused', () => {
       let tx;
       beforeEach(async () => {
         // Act
+        await contract.methods.pause().send({from: owner});
         tx = await contract.methods.kill().send({from: owner});
       });
   
@@ -335,10 +336,21 @@ contract('Splitter', accounts => {
         assert.strictEqual(tx.events.LogKilled.returnValues.account, owner);
       });
     });
+
+    context('if the contract is alive and running(non-paused)', () => {
+      it('should fail the contract', async () => {
+        // Act & Assert
+        await truffleAssert.reverts(
+          contract.methods.kill().send({from: owner}),
+          'revert Can\'t do that when the contract is running!'
+        );
+      });
+    });
     
     context('if the contract is killed', () => {
       beforeEach(async () => {
         // Arrange
+        await contract.methods.pause().send({from: owner});
         await contract.methods.kill().send({from: owner});
       });
   
@@ -353,34 +365,16 @@ contract('Splitter', accounts => {
   });
 
   context('When not owner kills the contract', () => {
+    beforeEach(async () => {
+      // Arrange
+      await contract.methods.pause().send({from: owner});
+    });
+
     it('should fail', async () => {
       // Act & Assert
       await truffleAssert.reverts(
         contract.methods.kill().send({from: someoneElse}),
         'Only owner can do this!'
-      );
-    });
-  });
-
-  context('When the contract is killed', () => {
-    beforeEach(async () => {
-      // Arrange
-      await contract.methods.kill().send({from: owner});
-    });
-
-    it('should fail to split', async () => {
-      // Act & Assert
-      await truffleAssert.reverts(
-        contract.methods.split(bob, carol).send({from: owner, value: toWei('0.02', 'ether')}),
-        'Can\'t do that when the contract is killed!'
-      );
-    });
-
-    it('should fail to withdraw', async () => {
-      // Act & Assert
-      await truffleAssert.reverts(
-        contract.methods.withdraw().send({from: bob}),
-        'Can\'t do that when the contract is killed!'
       );
     });
   });
@@ -396,27 +390,13 @@ contract('Splitter', accounts => {
       });
     });
 
-    context('if the contract is killed with zero balance', () => {
-      beforeEach(async () => {
-        // Arrange & Act
-        await contract.methods.kill().send({from: owner});
-      });
-
-      it('should fail to withdraw all', async () => {
-        // Act & Assert
-        await truffleAssert.reverts(
-          contract.methods.withdrawAll().send({from: owner}),
-          'Balance must be grater than zero to withdraw!'
-        );
-      });
-    });
-
-    context('if the contract is killed with non-zero balance', () => {
+    context('if the contract is killed', () => {
       let tx;
       let ownerBeforeWithdrawBalance;
       beforeEach(async () => {
         // Arrange
         await contract.methods.split(bob, carol).send({from: owner, value: toWei('2', 'ether')});
+        await contract.methods.pause().send({from: owner});
         await contract.methods.kill().send({from: owner});
         ownerBeforeWithdrawBalance = toBN(await web3.eth.getBalance(owner));
 
