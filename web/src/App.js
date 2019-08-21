@@ -61,7 +61,7 @@ class App extends Component {
       const contractAddress = networks[networkId].address;
       const contract = new web3.eth.Contract(abi, contractAddress)
       const network = await web3.eth.net.getNetworkType();
-      const owner = await contract.methods.owner().call();
+      const owner = await contract.methods.getOwner().call();
       const contractBalance = web3.utils.fromWei(await web3.eth.getBalance(contractAddress));
       this.setState({ web3, contract, owner, contractBalance, accounts, network, contractAddress, contractLoaded: true });
     } catch(e) {
